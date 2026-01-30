@@ -77,17 +77,26 @@
  &generic_COBALT_nml
         co2_calc = 'mocsy'
         imbalance_tolerance = 1.0e-9
-        do_FEISTY=.false.
+        do_FEISTY=.true.
         nonFmort                   = 0.1
 /
 
  &generic_tracer_nml
        do_generic_tracer=.true.
        do_generic_COBALT=.true.
-       do_generic_FEISTY=.false.
+       do_generic_FEISTY=.true.
        force_update_fluxes=.true.
        as_param='W92' 
        do_vertfill_post=.true.
+/
+
+ &generic_FEISTY_nml
+       do_print_FEISTY_diagnostic = .false.
+       FunctRspons_typeIII        = .false.
+       a_enc                      = 70.0
+       dp_int                     = 100.0 
+       k_fct_tp                   = 1.0
+       k50                        = 1.0
 /
 
  &ice_albedo_nml
