@@ -85,7 +85,7 @@ dic_valid_min = 0.0
 #
 # additional tracers from ESM4p-COBALT Preindustrial Control history file 
 # no unit conversion necessary
-cadet_arag_src_file = INPUT/init_ocean_cobalt.res.nc
+cadet_arag_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 cadet_arag_src_var_name = cadet_arag
 cadet_arag_src_var_unit = none
 cadet_arag_dest_var_name =  cadet_arag
@@ -94,7 +94,7 @@ cadet_arag_src_var_record = 1
 cadet_arag_src_var_gridspec = NONE
 cadet_arag_valid_min = 0.0
 #
-cadet_calc_src_file = INPUT/init_ocean_cobalt.res.nc
+cadet_calc_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 cadet_calc_src_var_name = cadet_calc
 cadet_calc_src_var_unit = none
 cadet_calc_dest_var_name =  cadet_calc
@@ -104,7 +104,7 @@ cadet_calc_src_var_gridspec = NONE
 cadet_calc_valid_min = 0.0
 #
 # NOTE: CASED = 0 at all K except K=1 from input dataset
-cased_src_file = INPUT/init_ocean_cobalt.res.nc
+cased_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 cased_src_var_name = cased
 cased_src_var_unit = none
 cased_dest_var_name =  cased
@@ -113,7 +113,7 @@ cased_src_var_record = 1
 cased_src_var_gridspec = NONE
 cased_valid_min = 0.0
 #
-chl_src_file = INPUT/init_ocean_cobalt.res.nc
+chl_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 chl_src_var_name = chl
 chl_src_var_unit = none
 chl_dest_var_name =  chl
@@ -122,7 +122,7 @@ chl_src_var_record = 1
 chl_src_var_gridspec = NONE
 chl_valid_min = 0.0
 #
-co3_ion_src_file = INPUT/init_ocean_cobalt.res.nc
+co3_ion_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 co3_ion_src_var_name = co3_ion
 co3_ion_src_var_unit = none
 co3_ion_dest_var_name =  co3_ion
@@ -131,7 +131,7 @@ co3_ion_src_var_record = 1
 co3_ion_src_var_gridspec = NONE
 co3_ion_valid_min = 0.0
 #
-fed_src_file = INPUT/init_ocean_cobalt.res.nc
+fed_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 fed_src_var_name = fed
 fed_src_var_unit = none
 fed_dest_var_name =  fed
@@ -140,7 +140,7 @@ fed_src_var_record = 1
 fed_src_var_gridspec = NONE
 fed_valid_min = 0.0
 #
-fedi_src_file = INPUT/init_ocean_cobalt.res.nc
+fedi_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 fedi_src_var_name = fedi
 fedi_src_var_unit = none
 fedi_dest_var_name =  fedi
@@ -149,7 +149,7 @@ fedi_src_var_record = 1
 fedi_src_var_gridspec = NONE
 fedi_valid_min = 0.0
 #
-felg_src_file = INPUT/init_ocean_cobalt.res.nc
+felg_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 felg_src_var_name = felg
 felg_src_var_unit = none
 felg_dest_var_name =  felg
@@ -158,7 +158,7 @@ felg_src_var_record = 1
 felg_src_var_gridspec = NONE
 felg_valid_min = 0.0
 #
-femd_src_file = INPUT/init_ocean_cobalt.res.nc
+femd_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 femd_src_var_name = femd
 femd_src_var_unit = none
 femd_dest_var_name =  femd
@@ -167,7 +167,7 @@ femd_src_var_record = 1
 femd_src_var_gridspec = NONE
 femd_valid_min = 0.0
 #
-fesm_src_file = INPUT/init_ocean_cobalt.res.nc
+fesm_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 fesm_src_var_name = fesm
 fesm_src_var_unit = none
 fesm_dest_var_name =  fesm
@@ -176,7 +176,7 @@ fesm_src_var_record = 1
 fesm_src_var_gridspec = NONE
 fesm_valid_min = 0.0
 #
-htotal_src_file = INPUT/init_ocean_cobalt.res.nc
+htotal_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 htotal_src_var_name = htotal
 htotal_src_var_unit = none
 htotal_dest_var_name =  htotal
@@ -186,44 +186,44 @@ htotal_src_var_gridspec = NONE
 htotal_valid_min = 3.981E-09
 htotal_valid_max = 1.259E-08
 #
-# All irr_mem variables are zero everywhere. 
-irr_aclm_src_file = INPUT/init_ocean_cobalt.res.nc
-irr_aclm_src_var_name = irr_mem
+# All irr_mem variables are zero everywhere. Actually 1e-10 irrclm
+irr_aclm_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
+irr_aclm_src_var_name = irr_aclm
 irr_aclm_src_var_unit = none
-irr_aclm_dest_var_name =  irr_mem
+irr_aclm_dest_var_name =  irr_aclm
 irr_aclm_dest_var_unit = mol kg-1
 irr_aclm_src_var_record = 1
 irr_aclm_src_var_gridspec = NONE
 irr_aclm_valid_min = 0.0
 #
-irr_mem_dp_src_file = INPUT/init_ocean_cobalt.res.nc
-irr_mem_dp_src_var_name = irr_mem
+irr_mem_dp_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
+irr_mem_dp_src_var_name = irr_aclm
 irr_mem_dp_src_var_unit = none
-irr_mem_dp_dest_var_name =  irr_mem
+irr_mem_dp_dest_var_name =  irr_aclm
 irr_mem_dp_dest_var_unit = mol kg-1
 irr_mem_dp_src_var_record = 1
 irr_mem_dp_src_var_gridspec = NONE
 irr_mem_dp_valid_min = 0.0
 #
-irr_aclm_sfc_src_file = INPUT/init_ocean_cobalt.res.nc
-irr_aclm_sfc_src_var_name = irr_mem
+irr_aclm_sfc_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
+irr_aclm_sfc_src_var_name = irr_aclm
 irr_aclm_sfc_src_var_unit = none
-irr_aclm_sfc_dest_var_name =  irr_mem
+irr_aclm_sfc_dest_var_name =  irr_aclm
 irr_aclm_sfc_dest_var_unit = mol kg-1
 irr_aclm_sfc_src_var_record = 1
 irr_aclm_sfc_src_var_gridspec = NONE
 irr_aclm_sfc_valid_min = 0.0
 #
-irr_aclm_z_src_file = INPUT/init_ocean_cobalt.res.nc
-irr_aclm_z_src_var_name = irr_mem
+irr_aclm_z_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
+irr_aclm_z_src_var_name = irr_aclm
 irr_aclm_z_src_var_unit = none
-irr_aclm_z_dest_var_name =  irr_mem
+irr_aclm_z_dest_var_name =  irr_aclm
 irr_aclm_z_dest_var_unit = mol kg-1
 irr_aclm_z_src_var_record = 1
 irr_aclm_z_src_var_gridspec = NONE
 irr_aclm_z_valid_min = 0.0
 #
-ldon_src_file = INPUT/init_ocean_cobalt.res.nc
+ldon_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 ldon_src_var_name = ldon
 ldon_src_var_unit = none
 ldon_dest_var_name =  ldon
@@ -232,7 +232,7 @@ ldon_src_var_record = 1
 ldon_src_var_gridspec = NONE
 ldon_valid_min = 0.0
 #
-ldop_src_file = INPUT/init_ocean_cobalt.res.nc
+ldop_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 ldop_src_var_name = ldop
 ldop_src_var_unit = none
 ldop_dest_var_name =  ldop
@@ -241,7 +241,7 @@ ldop_src_var_record = 1
 ldop_src_var_gridspec = NONE
 ldop_valid_min = 0.0
 #
-lith_src_file = INPUT/init_ocean_cobalt.res.nc
+lith_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 lith_src_var_name = lith
 lith_src_var_unit = none
 lith_dest_var_name =  lith
@@ -250,7 +250,7 @@ lith_src_var_record = 1
 lith_src_var_gridspec = NONE
 lith_valid_min = 0.0
 #
-nh4_src_file = INPUT/init_ocean_cobalt.res.nc
+nh4_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nh4_src_var_name = nh4
 nh4_src_var_unit = none
 nh4_dest_var_name =  nh4
@@ -259,7 +259,7 @@ nh4_src_var_record = 1
 nh4_src_var_gridspec = NONE
 nh4_valid_min = 0.0
 #
-nbact_src_file = INPUT/init_ocean_cobalt.res.nc
+nbact_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nbact_src_var_name = nbact
 nbact_src_var_unit = none
 nbact_dest_var_name =  nbact
@@ -268,7 +268,7 @@ nbact_src_var_record = 1
 nbact_src_var_gridspec = NONE
 nbact_valid_min = 0.0
 #
-ndi_src_file = INPUT/init_ocean_cobalt.res.nc
+ndi_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 ndi_src_var_name = ndi
 ndi_src_var_unit = none
 ndi_dest_var_name =  ndi
@@ -277,7 +277,7 @@ ndi_src_var_record = 1
 ndi_src_var_gridspec = NONE
 ndi_valid_min = 0.0
 #
-nlg_src_file = INPUT/init_ocean_cobalt.res.nc
+nlg_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nlg_src_var_name = nlg
 nlg_src_var_unit = none
 nlg_dest_var_name =  nlg
@@ -286,7 +286,7 @@ nlg_src_var_record = 1
 nlg_src_var_gridspec = NONE
 nlg_valid_min = 0.0
 #
-nmd_src_file = INPUT/init_ocean_cobalt.res.nc
+nmd_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nmd_src_var_name = nmd
 nmd_src_var_unit = none
 nmd_dest_var_name =  nmd
@@ -295,7 +295,7 @@ nmd_src_var_record = 1
 nmd_src_var_gridspec = NONE
 nmd_valid_min = 0.0
 #
-nsm_src_file = INPUT/init_ocean_cobalt.res.nc
+nsm_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nsm_src_var_name = nsm
 nsm_src_var_unit = none
 nsm_dest_var_name =  nsm
@@ -304,7 +304,7 @@ nsm_src_var_record = 1
 nsm_src_var_gridspec = NONE
 nsm_valid_min = 0.0
 #
-nlgz_src_file = INPUT/init_ocean_cobalt.res.nc
+nlgz_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nlgz_src_var_name = nlgz
 nlgz_src_var_unit = none
 nlgz_dest_var_name =  nlgz
@@ -313,7 +313,7 @@ nlgz_src_var_record = 1
 nlgz_src_var_gridspec = NONE
 nlgz_valid_min = 0.0
 #
-nmdz_src_file = INPUT/init_ocean_cobalt.res.nc
+nmdz_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nmdz_src_var_name = nmdz
 nmdz_src_var_unit = none
 nmdz_dest_var_name =  nmdz
@@ -322,7 +322,7 @@ nmdz_src_var_record = 1
 nmdz_src_var_gridspec = NONE
 nmdz_valid_min = 0.0
 #
-nsmz_src_file = INPUT/init_ocean_cobalt.res.nc
+nsmz_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nsmz_src_var_name = nsmz
 nsmz_src_var_unit = none
 nsmz_dest_var_name =  nsmz
@@ -331,7 +331,7 @@ nsmz_src_var_record = 1
 nsmz_src_var_gridspec = NONE
 nsmz_valid_min = 0.0
 #
-pdi_src_file = INPUT/init_ocean_cobalt.res.nc
+pdi_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 pdi_src_var_name = pdi
 pdi_src_var_unit = none
 pdi_dest_var_name =  pdi
@@ -340,7 +340,7 @@ pdi_src_var_record = 1
 pdi_src_var_gridspec = NONE
 pdi_valid_min = 0.0
 #
-plg_src_file = INPUT/init_ocean_cobalt.res.nc
+plg_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 plg_src_var_name = plg
 plg_src_var_unit = none
 plg_dest_var_name =  plg
@@ -349,7 +349,7 @@ plg_src_var_record = 1
 plg_src_var_gridspec = NONE
 plg_valid_min = 0.0
 #
-pmd_src_file = INPUT/init_ocean_cobalt.res.nc
+pmd_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 pmd_src_var_name = pmd
 pmd_src_var_unit = none
 pmd_dest_var_name =  pmd
@@ -358,7 +358,7 @@ pmd_src_var_record = 1
 pmd_src_var_gridspec = NONE
 pmd_valid_min = 0.0
 #
-psm_src_file = INPUT/init_ocean_cobalt.res.nc
+psm_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 psm_src_var_name = psm
 psm_src_var_unit = none
 psm_dest_var_name =  psm
@@ -367,7 +367,7 @@ psm_src_var_record = 1
 psm_src_var_gridspec = NONE
 psm_valid_min = 0.0
 #
-fedet_src_file = INPUT/init_ocean_cobalt.res.nc
+fedet_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 fedet_src_var_name = fedet
 fedet_src_var_unit = none
 fedet_dest_var_name =  fedet
@@ -376,7 +376,7 @@ fedet_src_var_record = 1
 fedet_src_var_gridspec = NONE
 fedet_valid_min = 0.0
 #
-lithdet_src_file = INPUT/init_ocean_cobalt.res.nc
+lithdet_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 lithdet_src_var_name = lithdet
 lithdet_src_var_unit = none
 lithdet_dest_var_name =  lithdet
@@ -385,7 +385,7 @@ lithdet_src_var_record = 1
 lithdet_src_var_gridspec = NONE
 lithdet_valid_min = 0.0
 #
-ndet_src_file = INPUT/init_ocean_cobalt.res.nc
+ndet_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 ndet_src_var_name = ndet
 ndet_src_var_unit = none
 ndet_dest_var_name =  ndet
@@ -394,7 +394,7 @@ ndet_src_var_record = 1
 ndet_src_var_gridspec = NONE
 ndet_valid_min = 0.0
 #
-pdet_src_file = INPUT/init_ocean_cobalt.res.nc
+pdet_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 pdet_src_var_name = pdet
 pdet_src_var_unit = none
 pdet_dest_var_name =  pdet
@@ -403,7 +403,7 @@ pdet_src_var_record = 1
 pdet_src_var_gridspec = NONE
 pdet_valid_min = 0.0
 #
-sidet_src_file = INPUT/init_ocean_cobalt.res.nc
+sidet_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 sidet_src_var_name = sidet
 sidet_src_var_unit = none
 sidet_dest_var_name =  sidet
@@ -412,7 +412,7 @@ sidet_src_var_record = 1
 sidet_src_var_gridspec = NONE
 sidet_valid_min = 0.0
 #
-silg_src_file = INPUT/init_ocean_cobalt.res.nc
+silg_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 silg_src_var_name = silg
 silg_src_var_unit = none
 silg_dest_var_name =  silg
@@ -421,7 +421,7 @@ silg_src_var_record = 1
 silg_src_var_gridspec = NONE
 silg_valid_min = 0.0
 #
-simd_src_file = INPUT/init_ocean_cobalt.res.nc
+simd_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 simd_src_var_name = simd
 simd_src_var_unit = none
 simd_dest_var_name =  simd
@@ -430,7 +430,7 @@ simd_src_var_record = 1
 simd_src_var_gridspec = NONE
 simd_valid_min = 0.0
 #
-sldon_src_file = INPUT/init_ocean_cobalt.res.nc
+sldon_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 sldon_src_var_name = sldon
 sldon_src_var_unit = none
 sldon_dest_var_name =  sldon
@@ -439,7 +439,7 @@ sldon_src_var_record = 1
 sldon_src_var_gridspec = NONE
 sldon_valid_min = 0.0
 #
-sldop_src_file = INPUT/init_ocean_cobalt.res.nc
+sldop_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 sldop_src_var_name = sldop
 sldop_src_var_unit = none
 sldop_dest_var_name =  sldop
@@ -448,7 +448,7 @@ sldop_src_var_record = 1
 sldop_src_var_gridspec = NONE
 sldop_valid_min = 0.0
 #
-srdon_src_file = INPUT/init_ocean_cobalt.res.nc
+srdon_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 srdon_src_var_name = srdon
 srdon_src_var_unit = none
 srdon_dest_var_name =  srdon
@@ -457,7 +457,7 @@ srdon_src_var_record = 1
 srdon_src_var_gridspec = NONE
 srdon_valid_min = 0.0
 #
-srdop_src_file = INPUT/init_ocean_cobalt.res.nc
+srdop_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 srdop_src_var_name = srdop
 srdop_src_var_unit = none
 srdop_dest_var_name =  srdop
@@ -466,7 +466,7 @@ srdop_src_var_record = 1
 srdop_src_var_gridspec = NONE
 srdop_valid_min = 0.0
 #
-cadet_arag_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+cadet_arag_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 cadet_arag_btf_src_var_name = cadet_arag_btf
 cadet_arag_btf_src_var_unit = none
 cadet_arag_btf_dest_var_name =  cadet_arag_btf
@@ -475,7 +475,7 @@ cadet_arag_btf_src_var_record = 1
 cadet_arag_btf_src_var_gridspec = NONE
 cadet_arag_btf_valid_min = 0.0
 #
-cadet_calc_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+cadet_calc_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 cadet_calc_btf_src_var_name = cadet_calc_btf
 cadet_calc_btf_src_var_unit = none
 cadet_calc_btf_dest_var_name =  cadet_calc_btf
@@ -484,7 +484,7 @@ cadet_calc_btf_src_var_record = 1
 cadet_calc_btf_src_var_gridspec = NONE
 cadet_calc_btf_valid_min = 0.0
 #
-lithdet_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+lithdet_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 lithdet_btf_src_var_name = lithdet_btf
 lithdet_btf_src_var_unit = none
 lithdet_btf_dest_var_name =  lithdet_btf
@@ -493,7 +493,7 @@ lithdet_btf_src_var_record = 1
 lithdet_btf_src_var_gridspec = NONE
 lithdet_btf_valid_min = 0.0
 #
-ndet_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+ndet_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 ndet_btf_src_var_name = ndet_btf
 ndet_btf_src_var_unit = none
 ndet_btf_dest_var_name =  ndet_btf
@@ -502,7 +502,7 @@ ndet_btf_src_var_record = 1
 ndet_btf_src_var_gridspec = NONE
 ndet_btf_valid_min = 0.0
 #
-pdet_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+pdet_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 pdet_btf_src_var_name = pdet_btf
 pdet_btf_src_var_unit = none
 pdet_btf_dest_var_name =  pdet_btf
@@ -511,7 +511,7 @@ pdet_btf_src_var_record = 1
 pdet_btf_src_var_gridspec = NONE
 pdet_btf_valid_min = 0.0
 #
-sidet_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+sidet_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 sidet_btf_src_var_name = sidet_btf
 sidet_btf_src_var_unit = none
 sidet_btf_dest_var_name =  sidet_btf
@@ -520,7 +520,7 @@ sidet_btf_src_var_record = 1
 sidet_btf_src_var_gridspec = NONE
 sidet_btf_valid_min = 0.0
 #
-mu_mem_ndi_src_file = INPUT/init_ocean_cobalt.res.nc
+mu_mem_ndi_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 mu_mem_ndi_src_var_name = mu_mem_ndi
 mu_mem_ndi_src_var_unit = none
 mu_mem_ndi_dest_var_name =  mu_mem_ndi
@@ -529,7 +529,7 @@ mu_mem_ndi_src_var_record = 1
 mu_mem_ndi_src_var_gridspec = NONE
 mu_mem_ndi_valid_min = 0.0
 #
-mu_mem_nlg_src_file = INPUT/init_ocean_cobalt.res.nc
+mu_mem_nlg_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 mu_mem_nlg_src_var_name = mu_mem_nlg
 mu_mem_nlg_src_var_unit = none
 mu_mem_nlg_dest_var_name =  mu_mem_nlg
@@ -538,7 +538,7 @@ mu_mem_nlg_src_var_record = 1
 mu_mem_nlg_src_var_gridspec = NONE
 mu_mem_nlg_valid_min = 0.0
 #
-mu_mem_nmd_src_file = INPUT/init_ocean_cobalt.res.nc
+mu_mem_nmd_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 mu_mem_nmd_src_var_name = mu_mem_nmd
 mu_mem_nmd_src_var_unit = none
 mu_mem_nmd_dest_var_name =  mu_mem_nmd
@@ -547,7 +547,7 @@ mu_mem_nmd_src_var_record = 1
 mu_mem_nmd_src_var_gridspec = NONE
 mu_mem_nmd_valid_min = 0.0
 #
-mu_mem_nsm_src_file = INPUT/init_ocean_cobalt.res.nc
+mu_mem_nsm_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 mu_mem_nsm_src_var_name = mu_mem_nsm
 mu_mem_nsm_src_var_unit = none
 mu_mem_nsm_dest_var_name =  mu_mem_nsm
@@ -556,7 +556,7 @@ mu_mem_nsm_src_var_record = 1
 mu_mem_nsm_src_var_gridspec = NONE
 mu_mem_nsm_valid_min = 0.0
 #
-fedet_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+fedet_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 fedet_btf_src_var_name = fedet_btf
 fedet_btf_src_var_unit = none
 fedet_btf_dest_var_name =  fedet_btf
@@ -565,7 +565,7 @@ fedet_btf_src_var_record = 1
 fedet_btf_src_var_gridspec = NONE
 fedet_btf_valid_min = 0.0
 #
-ndi_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+ndi_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 ndi_btf_src_var_name = ndet_btf
 ndi_btf_src_var_unit = none
 ndi_btf_dest_var_name =  ndet_btf
@@ -575,7 +575,7 @@ ndi_btf_src_var_gridspec = NONE
 ndi_btf_valid_min = 0.0
 # all _btf variables are zero everywhere,
 # so new _btf variables can be sourced from any existing.
-pdi_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+pdi_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 pdi_btf_src_var_name = ndet_btf
 pdi_btf_src_var_unit = none
 pdi_btf_dest_var_name =  pdi_btf
@@ -584,7 +584,7 @@ pdi_btf_src_var_record = 1
 pdi_btf_src_var_gridspec = NONE
 pdi_btf_valid_min = 0.0
 #
-nsm_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+nsm_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nsm_btf_src_var_name = ndet_btf
 nsm_btf_src_var_unit = none
 nsm_btf_dest_var_name =  ndet_btf
@@ -593,7 +593,7 @@ nsm_btf_src_var_record = 1
 nsm_btf_src_var_gridspec = NONE
 nsm_btf_valid_min = 0.0
 #
-psm_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+psm_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 psm_btf_src_var_name = ndet_btf
 psm_btf_src_var_unit = none
 psm_btf_dest_var_name =  pdi_btf
@@ -602,7 +602,7 @@ psm_btf_src_var_record = 1
 psm_btf_src_var_gridspec = NONE
 psm_btf_valid_min = 0.0
 #
-nmd_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+nmd_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nmd_btf_src_var_name = ndet_btf
 nmd_btf_src_var_unit = none
 nmd_btf_dest_var_name =  ndet_btf
@@ -611,7 +611,7 @@ nmd_btf_src_var_record = 1
 nmd_btf_src_var_gridspec = NONE
 nmd_btf_valid_min = 0.0
 #
-pmd_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+pmd_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 pmd_btf_src_var_name = ndet_btf
 pmd_btf_src_var_unit = none
 pmd_btf_dest_var_name =  pmd_btf
@@ -620,7 +620,7 @@ pmd_btf_src_var_record = 1
 pmd_btf_src_var_gridspec = NONE
 pmd_btf_valid_min = 0.0
 #
-nlg_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+nlg_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 nlg_btf_src_var_name = ndet_btf
 nlg_btf_src_var_unit = none
 nlg_btf_dest_var_name =  ndet_btf
@@ -629,7 +629,7 @@ nlg_btf_src_var_record = 1
 nlg_btf_src_var_gridspec = NONE
 nlg_btf_valid_min = 0.0
 #
-plg_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+plg_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 plg_btf_src_var_name = ndet_btf
 plg_btf_src_var_unit = none
 plg_btf_dest_var_name =  plg_btf
@@ -638,7 +638,7 @@ plg_btf_src_var_record = 1
 plg_btf_src_var_gridspec = NONE
 plg_btf_valid_min = 0.0
 #
-fedi_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+fedi_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 fedi_btf_src_var_name = fedet_btf
 fedi_btf_src_var_unit = none
 fedi_btf_dest_var_name =  fedet_btf
@@ -647,7 +647,7 @@ fedi_btf_src_var_record = 1
 fedi_btf_src_var_gridspec = NONE
 fedi_btf_valid_min = 0.0
 #
-fesm_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+fesm_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 fesm_btf_src_var_name = fedet_btf
 fesm_btf_src_var_unit = none
 fesm_btf_dest_var_name =  fedet_btf
@@ -656,7 +656,7 @@ fesm_btf_src_var_record = 1
 fesm_btf_src_var_gridspec = NONE
 fesm_btf_valid_min = 0.0
 #
-femd_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+femd_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 femd_btf_src_var_name = fedet_btf
 femd_btf_src_var_unit = none
 femd_btf_dest_var_name =  fedet_btf
@@ -665,7 +665,7 @@ femd_btf_src_var_record = 1
 femd_btf_src_var_gridspec = NONE
 femd_btf_valid_min = 0.0
 #
-felg_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+felg_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 felg_btf_src_var_name = fedet_btf
 felg_btf_src_var_unit = none
 felg_btf_dest_var_name =  fedet_btf
@@ -674,7 +674,7 @@ felg_btf_src_var_record = 1
 felg_btf_src_var_gridspec = NONE
 felg_btf_valid_min = 0.0
 #
-simd_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+simd_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 simd_btf_src_var_name = sidet_btf
 simd_btf_src_var_unit = none
 simd_btf_dest_var_name =  sidet_btf
@@ -683,7 +683,7 @@ simd_btf_src_var_record = 1
 simd_btf_src_var_gridspec = NONE
 simd_btf_valid_min = 0.0
 #
-silg_btf_src_file = INPUT/init_ocean_cobalt.res.nc
+silg_btf_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 silg_btf_src_var_name = sidet_btf
 silg_btf_src_var_unit = none
 silg_btf_dest_var_name =  sidet_btf
@@ -702,7 +702,7 @@ nh3_src_var_record = 1
 nh3_src_var_gridspec = NONE
 nh3_valid_min = 0.0
 #
-hp_ingest_nmdz_src_file = INPUT/init_ocean_cobalt.res.nc
+hp_ingest_nmdz_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 hp_ingest_nmdz_src_var_name = fedet_btf
 hp_ingest_nmdz_src_var_unit = none
 hp_ingest_nmdz_dest_var_name = fedet_btf
@@ -711,7 +711,7 @@ hp_ingest_nmdz_src_var_record = 1
 hp_ingest_nmdz_src_var_gridspec = NONE
 hp_ingest_nmdz_valid_min = 0.0
 #
-hp_ingest_nlgz_src_file = INPUT/init_ocean_cobalt.res.nc
+hp_ingest_nlgz_src_file = INPUT/bgc_woa_esper_ics_1993_2023-04_BATS.nc
 hp_ingest_nlgz_src_var_name = fedet_btf
 hp_ingest_nlgz_src_var_unit = none
 hp_ingest_nlgz_dest_var_name = fedet_btf
