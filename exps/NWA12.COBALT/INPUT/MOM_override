@@ -1,0 +1,8 @@
+! Needed to enable COBALT (set false for physics only)
+#override USE_generic_tracer = True
+! Set the 18.6 year nodal modulation of the tides to use 
+! the middle of the current model year.
+#override TIDE_NODAL_REF_DATE = 1993,7,2
+! Update the BGC tracer boundary condition data every xxxx seconds. 
+DT_OBC_SEG_UPDATE_OBGC = 1800
+#override RESTART_CHECKSUMS_REQUIRED = False

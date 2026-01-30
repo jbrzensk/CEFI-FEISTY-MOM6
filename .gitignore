@@ -1,0 +1,7 @@
+# Ignore vim and emacs files
+*.swp
+*~
+html
+
+# Ignore pycache
+**__pycache__

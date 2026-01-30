@@ -1,0 +1,54 @@
+#***********************************************************************
+#*                   GNU Lesser General Public License
+#*
+#* This file is part of the GFDL Flexible Modeling System (FMS).
+#*
+#* FMS is free software: you can redistribute it and/or modify it under
+#* the terms of the GNU Lesser General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or (at
+#* your option) any later version.
+#*
+#* FMS is distributed in the hope that it will be useful, but WITHOUT
+#* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#* for more details.
+#*
+#* You should have received a copy of the GNU Lesser General Public
+#* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
+#***********************************************************************
+
+# This is an automake file for the test_fms/interpolator directory of the FMS
+# package.
+
+# uramirez, Ed Hartnett
+
+# Find the fms_mod.mod file.
+AM_CPPFLAGS = -I$(MODDIR) -I$(top_srcdir)/include
+
+# Link to the FMS library.
+LDADD = $(top_builddir)/libFMS/libFMS.la
+
+# Build this test program.
+check_PROGRAMS = test_interpolator test_interpolator2_r4 test_interpolator2_r8
+
+# This is the source code for the test.
+test_interpolator_SOURCES = test_interpolator.F90
+test_interpolator2_r4_SOURCES = test_interpolator2.F90 test_interpolator_write_climatology.inc
+test_interpolator2_r8_SOURCES = test_interpolator2.F90 test_interpolator_write_climatology.inc
+
+test_interpolator2_r4_CPPFLAGS=-DTEST_INTP_KIND_=4 -I$(MODDIR)
+test_interpolator2_r8_CPPFLAGS=-DTEST_INTP_KIND_=8 -I$(MODDIR)
+
+# Run the test program.
+TESTS = test_interpolator2.sh
+
+TEST_EXTENSIONS = .sh
+SH_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+									$(abs_top_srcdir)/test_fms/tap-driver.sh
+TESTS_ENVIRONMENT= test_input_path="@TEST_INPUT_PATH@"
+
+# These files are also included in the distribution.
+EXTRA_DIST = test_interpolator2.sh
+
+# Clean up
+CLEANFILES = input.nml diag_table *.dpi *.spi *.dyn *.spl *.out

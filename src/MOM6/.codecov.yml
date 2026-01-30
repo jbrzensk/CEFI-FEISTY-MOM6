@@ -1,0 +1,13 @@
+coverage:
+    status:
+        project:
+            default:
+                threshold: 100%
+                base: parent
+        patch:
+            default:
+                threshold: 100%
+                base: parent
+
+fixes:
+  - "MOM6/::"
