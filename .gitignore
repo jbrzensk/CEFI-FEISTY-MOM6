@@ -9,7 +9,16 @@ builds/build/
 # Ignore netCDF files in exps
 exps/**/*.nc
 
+# FMS
+src/FMS
+
 #ignore libyaml
 src/libyaml
 # Ignore pycache
 **__pycache__
+
+# Ignore output and restart files
+exps/**/RESTART
+exps/**/OUTPUT
+exps/**/MOM6SIS2*
+
