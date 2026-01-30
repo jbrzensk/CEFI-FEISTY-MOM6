@@ -9,6 +9,7 @@ builds/build/
 # Ignore netCDF files in exps
 exps/**/*.nc
 
-
+#ignore libyaml
+src/libyaml
 # Ignore pycache
 **__pycache__
