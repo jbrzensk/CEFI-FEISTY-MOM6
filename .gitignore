@@ -23,3 +23,8 @@ exps/**/RESTART
 exps/**/OUTPUT
 exps/**/MOM6SIS2*
 
+COBALT_parameter*
+logfile*
+time_stamp*
+warnfile*
+
