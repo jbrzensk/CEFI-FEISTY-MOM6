@@ -1,0 +1,1 @@
+/project/jabrzenski/MOM6/EXPERIMENTS/ice_ocean_SIS2/datasets/OM4_025.JRA/init_ocean_cobalt.res.nc

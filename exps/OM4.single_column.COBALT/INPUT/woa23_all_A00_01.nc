@@ -1,0 +1,1 @@
+/project/jabrzenski/MOMS_DATA/datasets/WOA/woa23_all_A00_01.nc

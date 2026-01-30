@@ -1,0 +1,1 @@
+/project/jabrzenski/MOM6/EXPERIMENTS/ice_ocean_SIS2/datasets/OM4_025.JRA/GLODAPv2.2016b.oi-filled.20180322.nc

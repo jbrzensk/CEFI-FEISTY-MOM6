@@ -7,7 +7,7 @@ html
 builds/build/
 
 # Ignore netCDF files in exps
-exps/**/*.nc
+#exps/**/*.nc
 
 # FMS
 src/FMS/
