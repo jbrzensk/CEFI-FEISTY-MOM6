@@ -10,8 +10,9 @@ builds/build/
 exps/**/*.nc
 
 # FMS
-src/FMS
-
+src/FMS/
+src/FMS/*
+src/FMS/affinity/affinity.c
 #ignore libyaml
 src/libyaml
 # Ignore pycache
