@@ -1,4 +1,5 @@
 ! Blank file in which we can put "overrides" for parameters
+#OVERRIDE MAX_FIELDS=400
 #override REENTRANT_Y = True
 #override REENTRANT_X = True
 #override THICKNESS_CONFIG = "coord"

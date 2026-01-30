@@ -654,6 +654,8 @@ SEA_ICE_RIGID_MASS = 100.0      !   [kg m-2] default = 1000.0
 
 ! === module MOM_restart ===
 
+MAX_FIELDS = 104
+
 ! === module MOM_sum_output ===
 MAXTRUNC = 100000               !   [truncations save_interval-1] default = 0
                                 ! The run will be stopped, and the day set to a very
