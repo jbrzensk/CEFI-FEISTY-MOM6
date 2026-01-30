@@ -3,5 +3,12 @@
 *~
 html
 
+# Ignore builds directory
+builds/build/
+
+# Ignore netCDF files in exps
+exps/**/*.nc
+
+
 # Ignore pycache
 **__pycache__
