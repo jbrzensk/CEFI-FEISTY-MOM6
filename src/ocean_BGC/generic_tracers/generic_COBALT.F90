@@ -158,6 +158,13 @@ module generic_COBALT
 
   use FMS_co2calc_mod, only : FMS_co2calc, CO2_dope_vector
 
+  ! FEISTY Specific ( BRZENSKI )
+  use generic_FEISTY, only : generic_FEISTY_register, generic_FEISTY_init, generic_FEISTY_register_diag
+  use generic_FEISTY, only : generic_FEISTY_tracer_get_values, generic_FEISTY_tracer_get_pointer
+  use generic_FEISTY, only : generic_FEISTY_update_from_coupler, generic_FEISTY_fish_update_from_source
+  use generic_FEISTY, only : generic_FEISTY_end
+  use generic_FEISTY, only : generic_FEISTY_update_pointer, generic_FEISTY_send_diagnostic_data
+
   implicit none ; private
 
   public do_generic_COBALT
@@ -180,7 +187,9 @@ module generic_COBALT
                                              !! in generic_COBALT_nml.
 
   namelist /generic_COBALT_nml/ co2_calc, do_14c, do_nh3_atm_ocean_exchange, scheme_nitrif, debug, &
-     do_vertfill_pre,imbalance_tolerance,as_param_cobalt
+     do_vertfill_pre,imbalance_tolerance,as_param_cobalt, & 
+     ! FEISTY ( BRZENSKI )
+     do_FEISTY, do_print_FEISTY_diagnostic, nonFmort
   
   !
   ! Array allocations and flux calculations assume that phyto(1) is the
@@ -263,6 +272,13 @@ contains
     !Specify all prognostic and diagnostic tracers of this modules.
     call user_add_tracers(tracer_list)
 
+    ! Add FEISTY tracers ( BRZENSKI ): 
+    if (do_FEISTY) then 
+      print *, '<<< Registering FEISTY in COBALT >>>'
+      print *, '<<<<<<<<<<<<>>>>>>>>>>>>>>'
+      !call generic_FEISTY_register(tracer_list)  
+    end if 
+
   end subroutine generic_COBALT_register
 
   !  <SUBROUTINE NAME="generic_COBALT_init">
@@ -325,6 +341,12 @@ contains
     id_clock_cobalt_send_diagnostics = mpp_clock_id('(Cobalt: send diagnostics)',grain=CLOCK_MODULE)
     id_clock_cobalt_calc_diagnostics = mpp_clock_id('(Cobalt: calculate diagnostics)',grain=CLOCK_MODULE)
 
+    ! Initialiser FEISTY: Add parameters and allocate arrays! ( BRZENSKI )
+    if (do_FEISTY) then
+      print *, '<<< Initializing FEISTY from COBALT >>>'
+      !call generic_FEISTY_init(tracer_list)
+    end if 
+
   end subroutine generic_COBALT_init
 
   !>   Register diagnostic fields to be used in this module.
@@ -337,7 +359,8 @@ contains
     type(time_type):: init_time
     call g_tracer_get_common(isc,iec,jsc,jec,isd,ied,jsd,jed,nk,ntau,axes=axes,init_time=init_time)
     !
-    call cobalt_reg_diagnostics(diag_list,axes,init_time,phyto,zoo,bact,cobalt)    
+    call cobalt_reg_diagnostics(diag_list,axes,init_time,phyto,zoo,bact,cobalt)   
+    ! 
   end subroutine generic_COBALT_register_diag  
 
   !
@@ -1448,6 +1471,40 @@ contains
     call get_param(param_file, "generic_COBALT", "caco3_sat_max", cobalt%caco3_sat_max, &
                   "cap for positive scaling of caco3 detritus prod with saturation state", units="none", default= 10.0)
 
+    ! << flags to include neritic CaCO3 burial and enhanced CaCO3 dissolution >>
+    ! If the logical flag "do_ner_ca_bur" is set to true, neritic CaCO3 burial in shallow water (≤150 m) is activated.
+    ! Burial rates are based on O'Mara & Dunne (2019) and affect alkalinity and DIC at a 2:1 ratio.
+    ! The burial flux is vertically distributed evenly over the top 150m of the water column.
+    ! This is not exactly 150 m, but extends down to the model layer that includes the 150m depth.
+    ! The impact of neritic burial is distributed over 150m to account for the limited ability of global models 
+    ! to resolve coastal bathymetry. In high-resolution regional models, a better approach is to apply the burial 
+    ! effect directly to the bottom boundary condition via b_alk and b_dic.
+    ! The spatial pattern is prescribed, while the magnitude is temporally constant.
+    ! If the logical flag "do_resp_ca_diss" is set to true, respiration-driven CaCO3 dissolution 
+    ! due to localized undersaturation around sinking particles is activated.
+    ! This is parameterized as a fixed ratio of organic matter remineralization, targeting enhanced 
+    ! CaCO3 dissolution in the upper ocean (e.g., ≤300 m; Kwon et al., 2024).
+    ! The ratio is chosen to yield a global CaCO3 flux of ~0.75 Pg-C yr-1 at 300 m, consistent with 
+    ! Sulpis et al. (2021), who estimated 0.9 ± 0.15 Pg-C yr-1.   
+    !
+    ! O'Mara and Dunne, 2019; https://www.nature.com/articles/s41598-019-41064-w
+    ! Kwon et al., 2024; https://www.science.org/doi/10.1126/sciadv.adl0779
+    ! Sulpis et al., 2021; https://www.nature.com/articles/s41561-021-00743-y  
+    call get_param(param_file, "generic_COBALT", "do_ner_ca_bur", cobalt%do_ner_ca_bur, &
+            "logical flag to include neritic CaCO3 burial", default=.false.) 
+    call get_param(param_file, "generic_COBALT", "do_resp_ca_diss", cobalt%do_resp_ca_diss, &
+            "logical flag to include CaCO3 dissolution due to undersaturation around sinking particles", default=.false.)
+    ! >>
+
+    ! << Respiration-driven CaCO3 dissolution ratios from param file
+    call get_param(param_file, "generic_COBALT", "resp_ca_2_n_arag", cobalt%resp_ca_2_n_arag, &
+                   "ratio of aragonite dissolution to organic matter remineralization (respiration-driven)", &
+                   units="mol dissolved arag mol org. C-1", default = 0.0, scale = c2n)
+    call get_param(param_file, "generic_COBALT", "resp_ca_2_n_calc", cobalt%resp_ca_2_n_calc, &
+                   "ratio of calcite dissolution to organic matter remineralization (respiration-driven)", &
+                   units="mol dissolved calc mol org. C-1", default = 0.0, scale = c2n)
+    ! >>          
+
     ! Organic matter remineralization: Oxygen and temperature dependence follows Laufkotter et al. (2017).
     call get_param(param_file, "generic_COBALT", "k_o2", cobalt%k_o2, "O2 half-saturation for remineralization", &
                    units="mol O2 kg-1", default= 8.0e-6)
@@ -1634,8 +1691,11 @@ contains
     ! Nitrification as in Paulot et al., 2020 (https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2019MS002026)
     ! Note: Values and functional form to be updated for ESM4.5 following the data compilation of Tang et al.,
     ! (https://essd.copernicus.org/articles/15/5039/2023/essd-15-5039-2023.html)
+    !
+    ! Units for gamma_nitrif is dependent on the value of nitrif_b.
+    ! E.g., when nitrif_b = 2, the units for gamma_nitrif are mol N kg-1 day-1, but when nitrif_b = 1, they are day-1 only.
     call get_param(param_file, "generic_COBALT", "gamma_nitrif", cobalt%gamma_nitrif, "nitrification rate constant", &
-                   units="(moles kg)-1 sec-1", default= 3.5e6/(30.0*sperd))
+                   units="day-1 (mol N kg-1)-(nitrif_b-1)", default= 3.5e6/(30.0*sperd))
     call get_param(param_file, "generic_COBALT", "knh3_nitrif", cobalt%k_nh3_nitrif, "nitrification half-saturation", &
                    units="mol kg-1", default=3.1e-9)
     call get_param(param_file, "generic_COBALT", "irr_inhibit", cobalt%irr_inhibit, &
@@ -1644,6 +1704,8 @@ contains
                    "oxygen half-saturation constant for nitrification", units="mol O2 kg-1", default= 3.9e-6)
     call get_param(param_file, "generic_COBALT", "o2_min_nit", cobalt%o2_min_nit, &
                    "Minimum oxygen level for nitrification", units="mol O2 kg-1", default=0.01e-6)
+    call get_param(param_file, "generic_COBALT", "nitrif_b", cobalt%nitrif_b, &
+                   "Ammonium exponent for nitrification", units="unitless", default=2.0)
     ! Anammox parameterization developed for ESM4.5.  This relatively new process is turned off in the default CEFI
     ! configuration by setting the rate constant to 0.  To activate, set this constant to 0.07 day-1.  Translated to
     ! sec-1 by the model
@@ -2480,6 +2542,34 @@ contains
             init_value = 1.e-10           )
     end if
 
+    !==============================================================================================================
+    !  02/05/2025: Remy DENECHERE <rdenechere@ucsd.edu> COBALT output for offline FEISTY run *(BRZENSKI)*
+    !==============================================================================================================       
+    if (do_FEISTY) then
+      print *, 'Adding FEISTY tracers inside COBALT'
+      print *, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      call g_tracer_add(tracer_list, package_name,&
+      name       = 'hp_ingest_nmdz',         &
+      longname   = 'High trophic level ingestion of medium zooplankton',  &
+      units      = 'mol N kg-1 s-1',      &
+      prog       = .true.,       &
+      init_value = 0.0           )
+
+      call g_tracer_add(tracer_list, package_name,&
+      name       = 'hp_ingest_nlgz',         &
+      longname   = 'High trophic level ingestion of large zooplankton',  &
+      units      = 'mol N kg-1 s-1',      &
+      prog       = .true.,       &
+      init_value = 0.0 )          
+    end if
+
+   !  call g_tracer_add( tracer_list, package_name,&
+   !    name       = 'Pop_btm',         &
+   !    longname   = 'Bottom population available foe things',  &
+   !    units      = 'mol N kg-1 s-1',      &
+   !    prog       = .false.,       &
+   !    init_value = 0.0           )
+
   end subroutine user_add_tracers
 
 
@@ -2824,7 +2914,7 @@ contains
 
     ! send_diag for integeral outputs
     call cobalt_send_diagnostics(tracer_list,model_time,grid_tmask,Temp,Salt,rho_dzt,dzt, &
-         isc,iec,jsc,jec,isd,ied,jsd,jed,nk,grid_kmt,tau,phyto,zoo,bact,cobalt,post_vertdiff=.true.)
+         ilb,jlb,tau,phyto,zoo,bact,cobalt,post_vertdiff=.true.)
 
   end subroutine generic_COBALT_update_from_bottom
 
@@ -2925,6 +3015,11 @@ contains
     integer, dimension(:,:), Allocatable :: k_bot, kblt
     real, dimension(:), Allocatable   :: tmp_irr_band
     real, dimension(:,:), Allocatable :: rho_dzt_100,rho_dzt_200,rho_dzt_bot,sfc_irrad
+    ! << local variables used for neritic CaCO3 burial
+    integer :: k_150
+    real, dimension(:,:), Allocatable :: rho_dzt_150
+    real, dimension(:,:,:), Allocatable :: thickness_ratio_150
+    ! >> 
     real,dimension(1:NUM_ZOO,1:NUM_PREY) :: ipa_matrix,pa_matrix,ingest_matrix
     real,dimension(1:NUM_PREY) :: hp_ipa_vec,hp_pa_vec,hp_ingest_vec
     real,dimension(1:NUM_PREY) :: prey_vec,prey_p2n_vec,prey_fe2n_vec,prey_si2n_vec
@@ -2946,6 +3041,11 @@ contains
     logical ::  phos_nh3_override
     logical ::  pha_all_same = .true.
 
+    ! << local variables used for neritic CaCO3 burial
+    logical ::  neritic_override = .true.
+    real, dimension(:,:),   Allocatable :: neritic_cased_burial
+    ! >>
+
     real, dimension(:,:,:), Allocatable :: ztop, zmid, zbot
     real, dimension(:,:,:), Allocatable :: pre_totn, net_srcn, post_totn
     real, dimension(:,:,:), Allocatable :: pre_totp, net_srcp, post_totp
@@ -2959,6 +3059,9 @@ contains
     integer :: stdoutunit, imbal_flag, outunit
     type(g_tracer_type), pointer :: g_tracer,g_tracer_next
     real :: KD_SMOOTH = 1.0E-05
+    
+    ! For FEISTY ( BRZENSKI )
+    real(8) :: alt_var_1, alt_var_2, alt_var_3, alt_var_4, alt_var_5, alt_var_6, alt_var_7, alt_var_8, alt_var_9, alt_var_10
 
     if(do_vertfill_pre) then
       g_tracer => tracer_list
@@ -3176,6 +3279,22 @@ contains
     call g_tracer_get_values(tracer_list,'nsmz'    ,'field',zoo(1)%f_n(:,:,:) ,isd,jsd,positive=.true.)
     call g_tracer_get_values(tracer_list,'nmdz'    ,'field',zoo(2)%f_n(:,:,:) ,isd,jsd,positive=.true.)
     call g_tracer_get_values(tracer_list,'nlgz'    ,'field',zoo(3)%f_n(:,:,:) ,isd,jsd,positive=.true.)
+    !==============================================================================================================
+    !  12/10/2024: Remy DENECHERE <rdenechere@ucsd.edu> COBALT output for offline FEISTY run       
+    ! 
+    ! fish from FEISTY  
+    ! 
+    if (do_FEISTY) then 
+      call generic_FEISTY_tracer_get_values(tracer_list, isd, jsd, tau)
+      ! print*, "Before get : init hp_ingest_nmdz", cobalt%hp_ingest_nmdz(2,2,1:4)
+      ! print*, "Before get : init hp_ingest_nlgz", cobalt%hp_ingest_nlgz(2,2,1:4)
+      call g_tracer_get_values(tracer_list, 'hp_ingest_nmdz' ,'field', cobalt%hp_ingest_nmdz(:,:,:), isd, jsd, ntau=tau, positive = .true.)
+      call g_tracer_get_values(tracer_list, 'hp_ingest_nlgz' ,'field', cobalt%hp_ingest_nlgz(:,:,:), isd, jsd, ntau=tau, positive = .true.)
+      ! print*, "init hp_ingest_nmdz", cobalt%hp_ingest_nmdz(2,2,1:4)
+      ! print*, "init hp_ingest_nlgz", cobalt%hp_ingest_nlgz(2,2,1:4)
+ 
+    end if 
+    ! =======================================================================================
     !
     ! bacteria
     !
@@ -3738,7 +3857,7 @@ contains
              cobalt%juptake_nh4nitrif(i,j,k) = cobalt%gamma_nitrif * &
                   cobalt%f_nh3(i,j,k)/(cobalt%f_nh3(i,j,k)+cobalt%k_nh3_nitrif) *  &
                   (1.-cobalt%f_irr_aclm(i,j,k)/(cobalt%irr_inhibit+cobalt%f_irr_aclm(i,j,k))) * &
-                  cobalt%f_o2(i,j,k)/(cobalt%k_o2_nit+cobalt%f_o2(i,j,k)) * cobalt%f_nh4(i,j,k)**2
+                  cobalt%f_o2(i,j,k)/(cobalt%k_o2_nit+cobalt%f_o2(i,j,k)) * cobalt%f_nh4(i,j,k)**cobalt%nitrif_b
 
              if (scheme_nitrif .eq. 3) then
                 cobalt%juptake_nh4nitrif(i,j,k) = cobalt%juptake_nh4nitrif(i,j,k)*cobalt%expkT(i,j,k)
@@ -4145,38 +4264,87 @@ contains
        ! The higher-predator ingestion calculations mirror those used for zooplankton.  Switching occurs between
        ! medium and large zooplankton assuming that forage fish have unique adaptations for these two size classes
        !
-       food1 = hp_ipa_vec(7)*prey_vec(7)
-       food2 = hp_ipa_vec(8)*prey_vec(8)
-       ! calculate realized prey availability from innate availability and relative abundance of alternative prey
-       sw_fac_denom = food1**cobalt%nswitch_hp+food2**cobalt%nswitch_hp
-       hp_pa_vec(7) = hp_ipa_vec(7)*(food1**cobalt%nswitch_hp / &
-               (sw_fac_denom+epsln) )**(1.0/cobalt%mswitch_hp)
-       hp_pa_vec(8) = hp_ipa_vec(8)*(food2**cobalt%nswitch_hp / &
-               (sw_fac_denom+epsln) )**(1.0/cobalt%mswitch_hp)
-       ! calculate the total prey from the realized prey availability
-       tot_prey_hp = hp_pa_vec(7)*prey_vec(7) + hp_pa_vec(8)*prey_vec(8)
-       ! calculate the rate at which large zooplankton ingests each prey type.  The default assumption for higher
-       ! predators is that the biomass of higher predators scales in proportion to the available prey.  That is,
-       ! it is implicitly assumed that fish biomass is proportional to tot_prey_hp.  For example, the ingestion of 
-       ! medium zooplankton (mz) by hp is:
-       !
-       ! hp_ingest_vec(7) = Imax(T,O2)*(available mz biomass)/(ki_hp + tot_prey_hp) * HP; where HP ~ tot_prey_hp
-       ! 
-       ! Note that this results in a density-dependent (i.e., quadratic) mortality consistent with fish aggregating
-       ! over regions of abundant prey.  This response can be modulated with coef_hp, but care would be needed
-       ! to ensure imax_hp has proper units if this coefficient were changed.
-       hp_ingest_vec(7) = cobalt%hp_temp_lim(i,j,k)*cobalt%hp_o2lim(i,j,k)*cobalt%imax_hp* &
-                          hp_pa_vec(7)*prey_vec(7)*tot_prey_hp**(cobalt%coef_hp-1.0)/ &
-                            (cobalt%ki_hp+tot_prey_hp)
-       hp_ingest_vec(8) = cobalt%hp_temp_lim(i,j,k)*cobalt%hp_o2lim(i,j,k)*cobalt%imax_hp* &
-                          hp_pa_vec(8)*prey_vec(8)*tot_prey_hp**(cobalt%coef_hp-1.0)/ &
-                            (cobalt%ki_hp+tot_prey_hp)
+       !==============================================================================================================
+       !  09/05/2024: Remy DENECHERE <rdenechere@ucsd.edu> COBALT output for offline FEISTY run   
+       !  01/05/2025: ( BRZENSKI )    
+       if (do_FEISTY) then
+         ! Predation from FEISTY calculation: 
+         ! prey_vec remain unchanged from FEISTY 
+         ! hp_ingest_vec(7:8) is calculated partly from FEISTY  (zoo(m)%hp_ingest(i,j,k))
+         ! hp_ipa_vec is the preference (not used inside FEISTY)
+
+         food1 = hp_ipa_vec(7)*prey_vec(7)
+         food2 = hp_ipa_vec(8)*prey_vec(8)
+         
+         ! COBALT-fish predation: (with 0.1* cobalt%imax_hp to keep some non-fish mortality on zooplankton) 
+         sw_fac_denom = food1**cobalt%nswitch_hp+food2**cobalt%nswitch_hp
+
+         hp_pa_vec(7) = hp_ipa_vec(7)*(food1**cobalt%nswitch_hp / &
+                   (sw_fac_denom+epsln) )**(1.0/cobalt%mswitch_hp)
+         hp_pa_vec(8) = hp_ipa_vec(8)*(food2**cobalt%nswitch_hp / &
+                   (sw_fac_denom+epsln) )**(1.0/cobalt%mswitch_hp)
+         tot_prey_hp = hp_pa_vec(7)*prey_vec(7) + hp_pa_vec(8)*prey_vec(8)
+
+         hp_ingest_vec(7) = cobalt%hp_ingest_nmdz(i,j,k) + nonFmort * cobalt%hp_temp_lim(i,j,k)*cobalt%hp_o2lim(i,j,k)*cobalt%imax_hp* &
+                             hp_pa_vec(7)*prey_vec(7)*tot_prey_hp**(cobalt%coef_hp-1.0)/ &
+                             (cobalt%ki_hp+tot_prey_hp)
+         hp_ingest_vec(8) = cobalt%hp_ingest_nlgz(i,j,k) + nonFmort * cobalt%hp_temp_lim(i,j,k)*cobalt%hp_o2lim(i,j,k)*cobalt%imax_hp* &
+                             hp_pa_vec(8)*prey_vec(8)*tot_prey_hp**(cobalt%coef_hp-1.0)/ &
+                             (cobalt%ki_hp+tot_prey_hp)
+
+         food1 = hp_ipa_vec(7)*prey_vec(7)
+         food2 = hp_ipa_vec(8)*prey_vec(8)
+         sw_fac_denom = food1**cobalt%nswitch_hp+food2**cobalt%nswitch_hp
+         hp_pa_vec(7) = hp_ipa_vec(7)*(food1**cobalt%nswitch_hp / &
+                   (sw_fac_denom+epsln) )**(1.0/cobalt%mswitch_hp)
+         hp_pa_vec(8) = hp_ipa_vec(8)*(food2**cobalt%nswitch_hp / &
+                   (sw_fac_denom+epsln) )**(1.0/cobalt%mswitch_hp)
+         tot_prey_hp = hp_pa_vec(7)*prey_vec(7) + hp_pa_vec(8)*prey_vec(8)
+         alt_var_1 = cobalt%hp_temp_lim(i,j,k)*cobalt%hp_o2lim(i,j,k)*cobalt%imax_hp* &
+                             hp_pa_vec(7)*prey_vec(7)*tot_prey_hp**(cobalt%coef_hp-1.0)/ &
+                             (cobalt%ki_hp+tot_prey_hp)
+         alt_var_2 = cobalt%hp_temp_lim(i,j,k)*cobalt%hp_o2lim(i,j,k)*cobalt%imax_hp* &
+                             hp_pa_vec(8)*prey_vec(8)*tot_prey_hp**(cobalt%coef_hp-1.0)/ &
+                             (cobalt%ki_hp+tot_prey_hp)
+      !==============================================================================================================
+
+       else ! Former fish predation on zooplankton from COBALT: 
+         food1 = hp_ipa_vec(7)*prey_vec(7)
+         food2 = hp_ipa_vec(8)*prey_vec(8)
+         ! calculate realized prey availability from innate availability and relative abundance of alternative prey
+         sw_fac_denom = food1**cobalt%nswitch_hp+food2**cobalt%nswitch_hp
+         hp_pa_vec(7) = hp_ipa_vec(7)*(food1**cobalt%nswitch_hp / &
+                  (sw_fac_denom+epsln) )**(1.0/cobalt%mswitch_hp)
+         hp_pa_vec(8) = hp_ipa_vec(8)*(food2**cobalt%nswitch_hp / &
+                  (sw_fac_denom+epsln) )**(1.0/cobalt%mswitch_hp)
+         ! calculate the total prey from the realized prey availability
+         tot_prey_hp = hp_pa_vec(7)*prey_vec(7) + hp_pa_vec(8)*prey_vec(8)
+         ! calculate the rate at which large zooplankton ingests each prey type.  The default assumption for higher
+         ! predators is that the biomass of higher predators scales in proportion to the available prey.  That is,
+         ! it is implicitly assumed that fish biomass is proportional to tot_prey_hp.  For example, the ingestion of 
+         ! medium zooplankton (mz) by hp is:
+         !
+         ! hp_ingest_vec(7) = Imax(T,O2)*(available mz biomass)/(ki_hp + tot_prey_hp) * HP; where HP ~ tot_prey_hp
+         ! 
+         ! Note that this results in a density-dependent (i.e., quadratic) mortality consistent with fish aggregating
+         ! over regions of abundant prey.  This response can be modulated with coef_hp, but care would be needed
+         ! to ensure imax_hp has proper units if this coefficient were changed.
+
+         hp_ingest_vec(7) = cobalt%hp_temp_lim(i,j,k)*cobalt%hp_o2lim(i,j,k)*cobalt%imax_hp* &
+                           hp_pa_vec(7)*prey_vec(7)*tot_prey_hp**(cobalt%coef_hp-1.0)/ &
+                              (cobalt%ki_hp+tot_prey_hp)
+         hp_ingest_vec(8) = cobalt%hp_temp_lim(i,j,k)*cobalt%hp_o2lim(i,j,k)*cobalt%imax_hp* &
+                           hp_pa_vec(8)*prey_vec(8)*tot_prey_hp**(cobalt%coef_hp-1.0)/ &
+                              (cobalt%ki_hp+tot_prey_hp)
+       endif
+
+       ! Hight trophic level ingestion: 
        cobalt%hp_jingest_n(i,j,k) = hp_ingest_vec(7) + hp_ingest_vec(8)
        cobalt%hp_jingest_p(i,j,k) = hp_ingest_vec(7)*prey_p2n_vec(7) + &
-                                    hp_ingest_vec(8)*prey_p2n_vec(8)
-       !
-       ! Calculate losses of zooplankton to higher predators
-       !
+                                       hp_ingest_vec(8)*prey_p2n_vec(8)
+         !
+         ! Calculate losses of zooplankton to higher predators
+         !
 
        do n = 1,NUM_ZOO !{
          zoo(n)%jhploss_n(i,j,k) = hp_ingest_vec(NUM_PHYTO+1+n)
@@ -4563,6 +4731,46 @@ contains
                        min(cobalt%caco3_sat_max, max(0.0, cobalt%omega_calc(i,j,k) - 1.0)) + epsln
     enddo; enddo ; enddo !} i,j,k
 
+    ! << Neritic CaCO3 burial >>
+    ! << Enable neritic CaCO3 burial in shallow regions (depth <= 150m)
+    ! Read 'neritic_cased_burial' from netCDF file (O'Mara & Dunne, 2019) to apply spatial pattern
+    if (cobalt%do_ner_ca_bur) then
+        allocate(neritic_cased_burial(isd:ied,jsd:jed))
+        ! 'neritic_cased_burial' is the 2-D burial field saved in netCDF
+        ! data_override is intended to replace internal model fields with externally specified data
+        call data_override('OCN', 'neritic_cased_burial', neritic_cased_burial(isc:iec,jsc:jec), model_time,override=neritic_override)
+        ! Set up vertical redistribution based on local depth structure
+        ! Calculate number of layers covering the top 150m and depth ratios across these layers        
+        allocate(rho_dzt_150(isc:iec,jsc:jec))
+        allocate(thickness_ratio_150(isc:iec,jsc:jec,1:nk)); thickness_ratio_150 = 0.0
+
+        do j = jsc, jec ; do i = isc, iec ; !{
+           k_150 = 1
+           rho_dzt_150(i,j) = rho_dzt(i,j,1)
+           ! Sum the thickness of vertical layers from the surface down to 150m depth
+           do k = 2, grid_kmt(i,j)  !{
+              if (rho_dzt_150(i,j) .ge. cobalt%Rho_0 * 150.0) exit
+              k_150 = k
+              rho_dzt_150(i,j) = rho_dzt_150(i,j) + rho_dzt(i,j,k)
+           enddo  !} k
+           ! Calculate the fractional thickness (depth ratio) of each layer, and distribute neritic burial into the 3-D field accordingly
+           if (rho_dzt_150(i,j) /= 0.0) then
+              thickness_ratio_150(i,j,1:k_150) = rho_dzt(i,j,1:k_150) / rho_dzt_150(i,j)
+              cobalt%jdic_caco3_nerbur(i,j,1:k_150) = neritic_cased_burial(i,j) * thickness_ratio_150(i,j,1:k_150) / rho_dzt(i,j,1:k_150)
+              if (k_150 .lt. nk) cobalt%jdic_caco3_nerbur(i,j,k_150+1:nk) = 0.0
+           else
+              cobalt%jdic_caco3_nerbur(i,j,1:nk) = 0.0
+           endif
+        enddo ; enddo  !} i,j 
+    else
+        ! No neritic burial: set jdic_caco3_nerbur to zero to maintain consistency in carbon and alkalinity budgets
+        cobalt%jdic_caco3_nerbur = 0.0
+    endif
+    ! deallocate local variables used for neritic burial calculation
+    if (allocated(neritic_cased_burial)) deallocate(neritic_cased_burial)
+    if (allocated(thickness_ratio_150)) deallocate(thickness_ratio_150)
+    ! Neritic CaCO3 burial >>
+
     !
     ! 4.2: Lithogenic detritus production
     !
@@ -4675,6 +4883,20 @@ contains
          (cobalt%f_ndet(i,j,k) + epsln) * cobalt%remin_eff_fedet*cobalt%f_fedet(i,j,k)
        cobalt%jprod_fed(i,j,k) = cobalt%jprod_fed(i,j,k) + cobalt%jremin_fedet(i,j,k)
     enddo; enddo; enddo  !} i,j,k
+
+    ! << Enhanced CaCO3 dissolution driven by localized undersaturation around sinking particles >>
+    ! Add CaCO3 dissolution enhancement associated with organic matter (OM) decomposition
+    ! 
+    ! This routine applies a fixed ratio between POC remineralization and additional CaCO3 dissolution
+    if (cobalt%do_resp_ca_diss) then
+        do k=1,nk ; do j=jsc,jec ; do i=isc,iec  !{
+           cobalt%jdiss_cadet_arag(i,j,k) = cobalt%jdiss_cadet_arag(i,j,k) + &
+                                            cobalt%resp_ca_2_n_arag * cobalt%jremin_ndet(i,j,k)
+           cobalt%jdiss_cadet_calc(i,j,k) = cobalt%jdiss_cadet_calc(i,j,k) + &
+                                            cobalt%resp_ca_2_n_calc * cobalt%jremin_ndet(i,j,k)
+        enddo; enddo; enddo  !} i,j,k
+    endif     
+    ! >> 
 
     ! 
     ! 4.5: Iron scavenging onto detritus
@@ -4918,6 +5140,23 @@ contains
              ! The thickness of the bottom boundary layer (cobalt%bottom_thickness) impacts this upper bound.
              ! Efforts are underway to implement a more dynamic bottom boundary layer scheme.
              !
+            
+             ! FEISTY ( BRZENSKI )
+             ! FEISTY--no-vertical: -------------------------------------------------------------------------
+             ! Rémy Denéchère 
+             ! -----------------------------------------------------------------------------------------------
+             ! cobalt%Pop_btm(i,j): detritus usable for benthic comunities: 
+             cobalt%Pop_btm(i,j) =    cobalt%fntot_btm(i,j) - cobalt%fn_burial(i,j) - &
+                                           cobalt%fno3denit_sed(i,j)/cobalt%n_2_n_denit
+
+             if (do_FEISTY) then 
+             call generic_FEISTY_fish_update_from_source(tracer_list, i, j, nk, NUM_PREY, &
+                                                   Temp(i,j,1:nk), cobalt%Pop_btm(i,j),&
+                                                   dt, cobalt%zt(i, j, 1:nk), dzt(i,j, 1:nk),&
+                                                   zoo(2)%f_n(i,j,1:nk), zoo(3)%f_n(i,j,1:nk),&
+                                                   cobalt%hp_ingest_nmdz(i,j,1:nk), cobalt%hp_ingest_nlgz(i,j,1:nk))                                             
+             end if
+
              if (cobalt%btm_o2(i,j) .gt. cobalt%o2_min) then  !{
                 cobalt%fnoxic_sed(i,j) = max(0.0, min(cobalt%btm_o2(i,j)*cobalt%bottom_thickness* &
                                          cobalt%Rho_0*r_dt*(1.0/cobalt%o2_2_nh4), &
@@ -5146,6 +5385,13 @@ contains
        call g_tracer_get_pointer(tracer_list,'do14c','field',cobalt%p_do14c)
     endif
 
+    ! FEISTY ( BRZENSKI )
+    if (do_FEISTY) then 
+      call generic_FEISTY_tracer_get_pointer(tracer_list)
+      call g_tracer_get_pointer(tracer_list,'hp_ingest_nlgz','field', cobalt%p_hp_ingest_nlgz)
+      call g_tracer_get_pointer(tracer_list,'hp_ingest_nmdz','field', cobalt%p_hp_ingest_nmdz)
+    end if
+
     ! CAS calculate total N and P before source/sink
     ! calculate internal sources (those not applied as air-sea or benthos
     ! exchanges) to close the balance
@@ -5169,7 +5415,10 @@ contains
                     cobalt%p_nlgz(i,j,k,tau))*grid_tmask(i,j,k)
          net_srcn(i,j,k) = (phyto(DIAZO)%juptake_n2(i,j,k) - cobalt%jno3denit_wc(i,j,k) - &
                     cobalt%jnamx(i,j,k) + cobalt%jno3_iceberg(i,j,k))*dt*grid_tmask(i,j,k)
-         net_srcc(i,j,k) = 0.0
+         ! << Apply neritic CaCO3 burial contribution to net carbon source/sink term
+         ! This term is zero when neritic burial is turned off (default: jdic_caco3_nerbur = 0.0)
+         net_srcc(i,j,k) = -cobalt%jdic_caco3_nerbur(i,j,k) *dt*grid_tmask(i,j,k)
+         ! >>         
          pre_totc(i,j,k) = (cobalt%p_dic(i,j,k,tau) + &
                     cobalt%p_cadet_arag(i,j,k,tau) + cobalt%p_cadet_calc(i,j,k,tau) + &
                     cobalt%c_2_n*(cobalt%p_ndi(i,j,k,tau) + cobalt%p_nlg(i,j,k,tau) + &
@@ -5372,9 +5621,23 @@ contains
 !
     call mpp_clock_end(id_clock_source_sink_loop4)
     !
+    !     Fish Derivative: update from pointers 
+    !     FEISTY ( BRZENSKI )
+    if (do_FEISTY) then 
+      do k = 1, nk ; do j = jsc, jec ; do i = isc, iec  !{
+           cobalt%p_hp_ingest_nmdz(i,j,k,tau) = cobalt%hp_ingest_nmdz(i,j,k)
+           cobalt%p_hp_ingest_nlgz(i,j,k,tau) = cobalt%hp_ingest_nlgz(i,j,k)
+
+           call generic_FEISTY_update_pointer(i, j, k, tau, dt)
+
+      enddo; enddo ; enddo  !} i,j,k
+    end if 
+    
+    !
     !     NO3
     !
     call mpp_clock_begin(id_clock_source_sink_loop5)
+
     do k = 1, nk ; do j = jsc, jec ; do i = isc, iec  !{
        cobalt%jno3(i,j,k) =  cobalt%jprod_no3nitrif(i,j,k) - phyto(DIAZO)%juptake_no3(i,j,k) - &
                              phyto(LARGE)%juptake_no3(i,j,k) - phyto(MEDIUM)%juptake_no3(i,j,k) - &
@@ -5549,11 +5812,13 @@ contains
        !      to isolate the change in alkalinity due to aerobic organic
        !      matter remineralization
        !
+       ! << Apply neritic CaCO3 burial contribution
+       ! This term is zero when neritic burial is turned off (default: jdic_caco3_nerbur = 0.0) >>       
        cobalt%jalk(i,j,k) = 2.0 * (cobalt%jdiss_cadet_arag(i,j,k) +        &
           cobalt%jdiss_cadet_calc(i,j,k) - cobalt%jprod_cadet_arag(i,j,k) - &
-          cobalt%jprod_cadet_calc(i,j,k)) + phyto(DIAZO)%juptake_no3(i,j,k) + &
-          phyto(LARGE)%juptake_no3(i,j,k) + phyto(MEDIUM)%juptake_no3(i,j,k) + &
-          phyto(SMALL)%juptake_no3(i,j,k) + &
+          cobalt%jprod_cadet_calc(i,j,k) - cobalt%jdic_caco3_nerbur(i,j,k)) + &
+          phyto(DIAZO)%juptake_no3(i,j,k) + phyto(LARGE)%juptake_no3(i,j,k) + &
+          phyto(MEDIUM)%juptake_no3(i,j,k) + phyto(SMALL)%juptake_no3(i,j,k) + &
           (cobalt%jo2resp_wc(i,j,k)-cobalt%juptake_nh4nitrif(i,j,k)*cobalt%o2_2_nitrif)/cobalt%o2_2_nh4 + &
           cobalt%alk_2_n_denit*cobalt%jno3denit_wc(i,j,k) - &
           cobalt%alk_2_nh4_amx*cobalt%juptake_nh4amx(i,j,k) - &
@@ -5573,7 +5838,8 @@ contains
           phyto(MEDIUM)%juptake_nh4(i,j,k) - phyto(SMALL)%juptake_nh4(i,j,k) - &
           phyto(DIAZO)%juptake_n2(i,j,k)) + &
           cobalt%jdiss_cadet_arag(i,j,k) + cobalt%jdiss_cadet_calc(i,j,k) - &
-          cobalt%jprod_cadet_arag(i,j,k) - cobalt%jprod_cadet_calc(i,j,k))
+          cobalt%jprod_cadet_arag(i,j,k) - cobalt%jprod_cadet_calc(i,j,k) - &
+          cobalt%jdic_caco3_nerbur(i,j,k))
 
        cobalt%p_dic(i,j,k,tau) = cobalt%p_dic(i,j,k,tau) + cobalt%jdic(i,j,k) * dt * grid_tmask(i,j,k)
     enddo; enddo ; enddo !} i,j,k
@@ -6375,6 +6641,29 @@ contains
     enddo ; enddo  !} i,j
     deallocate(rho_dzt_200)
 
+    ! << Add diagnostic for neritic CaCO3 burial
+    ! Calculate the vertically integrated neritic CaCO3 burial within the top 150m
+    if (cobalt%do_ner_ca_bur) then
+       do j = jsc, jec ; do i = isc, iec !{
+          k_150 = 1
+          rho_dzt_150(i,j) = rho_dzt(i,j,1)
+          cobalt%jdic_caco3_nerbur_150(i,j) = cobalt%jdic_caco3_nerbur(i,j,1) * rho_dzt(i,j,1)
+
+          do k = 2, grid_kmt(i,j)  !{
+             if (rho_dzt_150(i,j) .ge. cobalt%Rho_0 * 150.0) exit
+             k_150 = k
+             rho_dzt_150(i,j) = rho_dzt_150(i,j) + rho_dzt(i,j,k)
+             cobalt%jdic_caco3_nerbur_150(i,j) = cobalt%jdic_caco3_nerbur_150(i,j) + &
+                                                 cobalt%jdic_caco3_nerbur(i,j,k) * rho_dzt(i,j,k)
+          enddo  !} k
+       enddo ; enddo  !} i,j 
+    else
+       ! No neritic burial: set integral to zero
+       cobalt%jdic_caco3_nerbur_150 = 0.0
+    endif
+    if (allocated(rho_dzt_150)) deallocate(rho_dzt_150)
+    ! Add diagnostic for neritic CaCO3 burial >>
+
     call g_tracer_get_values(tracer_list,'alk','runoff_tracer_flux',cobalt%runoff_flux_alk,isd,jsd)
     call g_tracer_get_values(tracer_list,'dic','runoff_tracer_flux',cobalt%runoff_flux_dic,isd,jsd)
     if (do_14c) then  !{
@@ -6430,8 +6719,36 @@ contains
 ! Send phytoplankton diagnostic data
 
     call cobalt_send_diagnostics(tracer_list,model_time,grid_tmask,Temp,Salt,rho_dzt,dzt, &
-         isc,iec,jsc,jec,isd,ied,jsd,jed,nk,grid_kmt,tau,phyto,zoo,bact,cobalt)
+         ilb,jlb,tau,phyto,zoo,bact,cobalt)
 
+    !==============================================================================================================
+    !  01/05/2025: ( BRZENSKI ) Remy DENECHERE <rdenechere@ucsd.edu> COBALT output for offline FEISTY run   
+    ! Send Fish diagnostic data the old way
+   ! print *, 'Sending Fish diagnostic data the old way'
+   !  if (cobalt%id_Pop_btm .gt. 0)          &
+   !       used = g_send_data(cobalt%id_Pop_btm, cobalt%Pop_btm,           &
+   !       model_time, rmask = grid_tmask(:,:,1),&
+   !       is_in=isc, js_in=jsc, ie_in=iec, je_in=jec)
+
+    ! zoo(2) and zoo(3) are sent regardless if offline ( see 6 lines above ) 
+    if (do_FEISTY) then 
+
+      ! Needs to be changed to print this out. OG Cobalt never changes
+      ! id_f_n from init value of -1 !! ( BRZENSKI )
+      ! if (zoo(2)%id_f_n .gt. 0)     &
+      !    used = g_send_data(zoo(2)%id_f_n, zoo(2)%f_n,         &
+      !    model_time, rmask = grid_tmask, &
+      !    is_in=isc, js_in=jsc, ks_in=1,ie_in=iec, je_in=jec, ke_in=nk)
+
+      ! if(zoo(3)%id_f_n .gt. 0)     &
+      !    used = g_send_data(zoo(3)%id_f_n, zoo(3)%f_n,         &
+      !    model_time, rmask = grid_tmask, &
+      !    is_in=isc, js_in=jsc, ks_in=1,ie_in=iec, je_in=jec, ke_in=nk)
+      ! Fish tracers and diagnostics 
+      ! FEISTY tracers: 
+      call generic_FEISTY_send_diagnostic_data(model_time)
+
+   end if 
 !==============================================================================================================
 
     call mpp_clock_end(id_clock_cobalt_send_diagnostics)
@@ -6816,6 +7133,13 @@ contains
   subroutine generic_COBALT_end
     character(len=fm_string_len), parameter :: sub_name = 'generic_COBALT_end'
     call user_deallocate_arrays
+     
+    ! FEISTY ( BRZENSKI )
+    if (do_FEISTY) then  
+      ! called from generic_tracer.F90
+      !call generic_FEISTY_end
+    end if
+
   end subroutine generic_COBALT_end
 
   !
@@ -7081,6 +7405,10 @@ contains
     allocate(cobalt%jprod_lithdet(isd:ied, jsd:jed, 1:nk)); cobalt%jprod_lithdet=0.0
     allocate(cobalt%jprod_cadet_arag(isd:ied, jsd:jed, 1:nk)); cobalt%jprod_cadet_arag=0.0
     allocate(cobalt%jprod_cadet_calc(isd:ied, jsd:jed, 1:nk)); cobalt%jprod_cadet_calc=0.0
+    ! << Always allocate 3-D neritic CaCO3 burial production field
+    ! Needed for DIC and alkalinity budgets even if burial is disabled (set to zero if do_ner_ca_bur = .false.)
+    allocate(cobalt%jdic_caco3_nerbur(isd:ied, jsd:jed, 1:nk)); cobalt%jdic_caco3_nerbur=0.0
+    ! >>  
     allocate(cobalt%jprod_nh4(isd:ied, jsd:jed, 1:nk))    ; cobalt%jprod_nh4=0.0
     allocate(cobalt%jprod_nh4_plus_btm(isd:ied, jsd:jed, 1:nk))    ; cobalt%jprod_nh4_plus_btm=0.0
     allocate(cobalt%jprod_po4(isd:ied, jsd:jed, 1:nk))    ; cobalt%jprod_po4=0.0
@@ -7223,6 +7551,13 @@ contains
     allocate(cobalt%wc_vert_int_jfe_iceberg(isd:ied, jsd:jed))  ; cobalt%wc_vert_int_jfe_iceberg=0.0
     allocate(cobalt%wc_vert_int_jno3_iceberg(isd:ied, jsd:jed))  ; cobalt%wc_vert_int_jno3_iceberg=0.0
     allocate(cobalt%wc_vert_int_jpo4_iceberg(isd:ied, jsd:jed))  ; cobalt%wc_vert_int_jpo4_iceberg=0.0
+
+    ! FESITY ( BRZENSKI )
+    allocate(cobalt%Pop_btm(isd:ied,jsd:jed))                    ;   cobalt%Pop_btm  = 0.0 !  
+    if (do_FEISTY) then 
+          allocate(cobalt%hp_ingest_nmdz(isd:ied, jsd:jed, 1:nk));   cobalt%hp_ingest_nmdz  = 0.0 ! 
+          allocate(cobalt%hp_ingest_nlgz(isd:ied, jsd:jed, 1:nk));   cobalt%hp_ingest_nlgz  = 0.0 ! 
+    endif
 !==============================================================================================================
     !
     ! allocate 100m integrated quantities
@@ -7288,6 +7623,9 @@ contains
    allocate(cobalt%jprod_sidet_100(isd:ied,jsd:jed))        ; cobalt%jprod_sidet_100 = 0.0
    allocate(cobalt%jprod_cadet_calc_100(isd:ied,jsd:jed))   ; cobalt%jprod_cadet_calc_100 = 0.0
    allocate(cobalt%jprod_cadet_arag_100(isd:ied,jsd:jed))   ; cobalt%jprod_cadet_arag_100 = 0.0
+   ! << Allocate 2-D diagnostic for integrated neritic CaCO3 burial (0–150m)
+   allocate(cobalt%jdic_caco3_nerbur_150(isd:ied,jsd:jed)); cobalt%jdic_caco3_nerbur_150 = 0.0
+   ! >>
    allocate(cobalt%jremin_ndet_100(isd:ied,jsd:jed))        ; cobalt%jremin_ndet_100 = 0.0
    allocate(cobalt%jprod_mesozoo_200(isd:ied,jsd:jed))      ; cobalt%jprod_mesozoo_200 = 0.0
    allocate(cobalt%daylength(isd:ied,jsd:jed))              ; cobalt%daylength = 0.0
@@ -7624,6 +7962,9 @@ contains
     deallocate(cobalt%jprod_lithdet)
     deallocate(cobalt%jprod_cadet_arag)
     deallocate(cobalt%jprod_cadet_calc)
+    ! << Deallocate variables for neritic CaCO3 burial 
+    deallocate(cobalt%jdic_caco3_nerbur)
+    ! >>     
     deallocate(cobalt%jprod_nh4)
     deallocate(cobalt%jprod_nh4_plus_btm)
     deallocate(cobalt%jprod_po4)
@@ -7745,6 +8086,9 @@ contains
     deallocate(cobalt%jprod_sidet_100)
     deallocate(cobalt%jprod_cadet_arag_100)
     deallocate(cobalt%jprod_cadet_calc_100)
+    ! << Deallocate variables for neritic CaCO3 burial
+    deallocate(cobalt%jdic_caco3_nerbur_150)
+    ! >>
     deallocate(cobalt%jprod_mesozoo_200)
     deallocate(cobalt%daylength)
     deallocate(cobalt%jremin_ndet_100)
@@ -7826,6 +8170,15 @@ contains
     deallocate(cobalt%wc_vert_int_jfe_iceberg)
     deallocate(cobalt%wc_vert_int_jno3_iceberg)
     deallocate(cobalt%wc_vert_int_jpo4_iceberg)
+
+    !==============================================================================================================
+    ! FEISTY ( BRZENSKI ) 
+    ! 09/05/2024: Remy DENECHERE <rdenechere@ucsd.edu> COBALT output for offline FEISTY run
+    deallocate(cobalt%Pop_btm) 
+    if (do_FEISTY) then 
+         deallocate(cobalt%hp_ingest_nmdz); 
+         deallocate(cobalt%hp_ingest_nlgz); 
+    endif
 !==============================================================================================================
 
     do n = 1, NUM_PHYTO

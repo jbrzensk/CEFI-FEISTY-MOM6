@@ -1508,6 +1508,12 @@ module COBALT_reg_diag
     cobalt%id_jprod_cadet_calc = register_diag_field(package_name, vardesc_temp%name, axes(1:3),&
          init_time, vardesc_temp%longname,vardesc_temp%units, missing_value = missing_value1)
 
+     ! << Add neritic CaCO3 burial effect on dissolved inorganic carbon (DIC)
+    vardesc_temp = vardesc("jdic_caco3_nerbur","Impact of neritic CaCO3 burial on DIC",'h','L','s','mol kg-1 s-1','f')
+    cobalt%id_jdic_caco3_nerbur = register_diag_field(package_name, vardesc_temp%name, axes(1:3),&
+         init_time, vardesc_temp%longname,vardesc_temp%units, missing_value = missing_value1)
+    ! >>
+
     vardesc_temp = vardesc("jprod_lithdet","Lithogenic detritus production",'h','L','s','g kg-1 s-1','f')
     cobalt%id_jprod_lithdet = register_diag_field(package_name, vardesc_temp%name, axes(1:3),&
          init_time, vardesc_temp%longname,vardesc_temp%units, missing_value = missing_value1)
@@ -2784,6 +2790,12 @@ module COBALT_reg_diag
     cobalt%id_jprod_cadet_arag_100 = register_diag_field(package_name, vardesc_temp%name, axes(1:2),&
          init_time, vardesc_temp%longname,vardesc_temp%units, missing_value = missing_value1)
 
+    ! << Add neritic CaCO3 burial
+    vardesc_temp = vardesc("jdic_caco3_nerbur_150","Neritic CaCO3 burial integral in upper 150m",'h','1','s','mol m-2 s-1','f')
+    cobalt%id_jdic_caco3_nerbur_150 = register_diag_field(package_name, vardesc_temp%name, axes(1:2),&
+         init_time, vardesc_temp%longname,vardesc_temp%units, missing_value = missing_value1)
+    ! >>
+
     vardesc_temp = vardesc("jremin_ndet_100","Remineralization of nitrogen detritus integral in upper 100m",'h','1','s','mol m-2 s-1','f')
     cobalt%id_jremin_ndet_100 = register_diag_field(package_name, vardesc_temp%name, axes(1:2),&
          init_time, vardesc_temp%longname,vardesc_temp%units, missing_value = missing_value1)
@@ -3159,7 +3171,6 @@ module COBALT_reg_diag
     vardesc_temp = vardesc("jo2","O2 source",'h','L','s','mol kg-1 s-1','f')
     cobalt%id_jo2 = register_diag_field(package_name, vardesc_temp%name, axes(1:3),&
          init_time, vardesc_temp%longname,vardesc_temp%units, missing_value = missing_value1)
-
 
 !==============================================================================================================
 ! 2016/07/05 jgj register and send temperature as a test
@@ -4634,6 +4645,15 @@ module COBALT_reg_diag
          cmor_standard_name="integral_wrt_depth_of_tendency_of_sea_water_alkalinity_expressed_as_mole_equivalent_due_to_biological_processes", &
          cmor_long_name="Rate of Change of Biological Alkalinity due to Biological Activity")
 
+    ! FEISTY ( BRZENSKI )
+    !  09/05/2024: Remy DENECHERE <rdenechere@ucsd.edu> COBALT output for offline FEISTY run
+!     vardesc_temp = vardesc("Pop_btm", "Detritus flux to sea floor",'h','1','s','mol m-2 s-1','f')
+!     cobalt%id_Pop_btm = register_diag_field(package_name, vardesc_temp%name, axes(1:2), &
+!             init_time, vardesc_temp%longname,vardesc_temp%units, missing_value = missing_value1, &
+!             cmor_field_name="Pop_btm", cmor_units="mol m-2 s-1",                          &
+!             cmor_standard_name="mass_flux_of_detritus_to_sea_floor", &
+!             cmor_long_name="FEISTY Detritus flux to sea floor")
+    
 !==============================================================================================================
 
   end subroutine cobalt_reg_diagnostics

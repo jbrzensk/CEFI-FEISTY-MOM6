@@ -19,7 +19,7 @@ module COBALT_send_diag
   use time_manager_mod,  only: time_type
 
   use g_tracer_utils, only : g_send_data,g_tracer_get_pointer,g_tracer_set_values
-  use g_tracer_utils, only : g_tracer_type
+  use g_tracer_utils, only : g_tracer_type, g_tracer_get_common
   use FMS_co2calc_mod, only : FMS_co2calc, CO2_dope_vector
 
   implicit none; private
@@ -30,39 +30,32 @@ module COBALT_send_diag
   contains
 
     !> subroutine that handles send_diag calls for COBALT phyto, zoo, and bact      
-    subroutine cobalt_send_diagnostics(tracer_list, model_time,grid_tmask,Temp,Salt,rho_dzt,dzt,&
-                                 isc,iec,jsc,jec,isd,ied,jsd,jed,nk,grid_kmt,tau,phyto,zoo,bact,cobalt,&
-                                 post_vertdiff)         
+    subroutine cobalt_send_diagnostics(tracer_list,model_time,grid_tmask,Temp,Salt,rho_dzt,dzt,&
+                                 ilb,jlb,tau,phyto,zoo,bact,cobalt,&
+                                 post_vertdiff)
       type(g_tracer_type),                       pointer :: tracer_list
       type(time_type),                           intent(in) :: model_time
-      real, dimension(:,:,:),                    pointer :: grid_tmask
-      real, dimension(isc:,jsc:,:),              intent(in) :: Temp, Salt
-      real, dimension(isc:,jsc:,:),              intent(in) :: rho_dzt
-      real, dimension(isc:,jsc:,:),              intent(in) :: dzt
-      integer,                                   intent(in) :: isc
-      integer,                                   intent(in) :: iec
-      integer,                                   intent(in) :: jsc
-      integer,                                   intent(in) :: jec
-      integer,                                   intent(in) :: isd
-      integer,                                   intent(in) :: ied
-      integer,                                   intent(in) :: jsd
-      integer,                                   intent(in) :: jed
-      integer,                                   intent(in) :: nk
-      integer, dimension(isc:,jsc:),             intent(in) :: grid_kmt
-      integer,                                   intent(in) :: tau
+      real, dimension(ilb:,jlb:,:),              intent(in) :: Temp, Salt, rho_dzt, dzt
+      integer,                                   intent(in) :: ilb,jlb,tau
       type(phytoplankton), dimension(NUM_PHYTO), intent(inout) :: phyto
       type(zooplankton), dimension(NUM_ZOO),     intent(inout) :: zoo
       type(bacteria), dimension(NUM_BACT),       intent(inout) :: bact
       type(generic_COBALT_type),                 intent(inout) :: cobalt
       logical,                                   intent(in), optional :: post_vertdiff
       !> local variables
-      integer :: n,i,j,k
+      integer :: isc,iec,jsc,jec,isd,ied,jsd,jed,nk,ntau,n,i,j,k
       logical :: used  
       logical :: is_post_vertdiff
       real :: drho_dzt
+      real, dimension(:,:,:) ,pointer :: grid_tmask
+      integer, dimension(:,:),pointer :: mask_coast,grid_kmt      
       integer, dimension(:,:), Allocatable :: k_bot
-      real, dimension(:,:), Allocatable :: rho_dzt_100,rho_dzt_200,rho_dzt_bot
+      real, dimension(:,:), Allocatable :: rho_dzt_100,rho_dzt_200,rho_dzt_bot    
       integer :: k_100,k_200
+
+
+      call g_tracer_get_common(isc,iec,jsc,jec,isd,ied,jsd,jed,nk,ntau,&
+           grid_tmask=grid_tmask,grid_mask_coast=mask_coast,grid_kmt=grid_kmt)
 
       ! Set default value
       is_post_vertdiff = .false.
@@ -76,9 +69,6 @@ module COBALT_send_diag
       ! (default to .false. if post_vertdiff is not present)
       select case (is_post_vertdiff)
         case (.true.)     ! Saving prognostic tracers after update from vertical diffusion and sinking
-
-          !call g_tracer_get_common(isc,iec,jsc,jec,isd,ied,jsd,jed,nk,ntau,&
-          !     grid_tmask=grid_tmask,grid_mask_coast=mask_coast,grid_kmt=grid_kmt)
 
           ! Get prognostics tracer fields via their pointers 
           call g_tracer_get_pointer(tracer_list,'alk'    ,'field',cobalt%p_alk    )
@@ -1149,6 +1139,10 @@ module COBALT_send_diag
           used = g_send_data(cobalt%id_intpoc, cobalt%wc_vert_int_poc*12.0e-3,   &
             model_time, rmask = grid_tmask(:,:,1), is_in=isc, js_in=jsc, ie_in=iec, je_in=jec)
 
+          ! FEISTY ( BRZENSKI )
+          used = g_send_data(cobalt%id_Pop_btm, cobalt%Pop_btm, &
+          model_time, rmask = grid_tmask(:,:,1), is_in=isc, js_in=jsc, ie_in=iec, je_in=jec)
+
         case (.false.)
         ! Logic for "update_from_source" case
 
@@ -1371,6 +1365,10 @@ module COBALT_send_diag
             model_time, rmask = grid_tmask(:,:,:), is_in=isc, js_in=jsc, ks_in=1,ie_in=iec, je_in=jec, ke_in=nk)
           used = g_send_data(cobalt%id_jprod_cadet_calc, cobalt%jprod_cadet_calc, &
             model_time, rmask = grid_tmask(:,:,:), is_in=isc, js_in=jsc, ks_in=1,ie_in=iec, je_in=jec, ke_in=nk)
+          ! << Add neritic CaCO3 burial
+          used = g_send_data(cobalt%id_jdic_caco3_nerbur, cobalt%jdic_caco3_nerbur, &
+            model_time, rmask = grid_tmask(:,:,:), is_in=isc, js_in=jsc, ks_in=1,ie_in=iec, je_in=jec, ke_in=nk)
+          ! >>
           used = g_send_data(cobalt%id_jprod_ndet, cobalt%jprod_ndet, &
             model_time, rmask = grid_tmask, is_in=isc, js_in=jsc, ks_in=1,ie_in=iec, je_in=jec, ke_in=nk)
           used = g_send_data(cobalt%id_jprod_pdet, cobalt%jprod_pdet, &
@@ -1727,7 +1725,12 @@ module COBALT_send_diag
           used = g_send_data(cobalt%id_jprod_cadet_arag_100, cobalt%jprod_cadet_arag_100, &
             model_time, rmask = grid_tmask(:,:,1),  is_in=isc, js_in=jsc, ie_in=iec, je_in=jec)
           used = g_send_data(cobalt%id_jremin_ndet_100, cobalt%jremin_ndet_100, &
+            model_time, rmask = grid_tmask(:,:,1), is_in=isc, js_in=jsc, ie_in=iec, je_in=jec) 
+          !
+          ! << Neritic CaCO3 burial 150m flux integrals
+          used = g_send_data(cobalt%id_jdic_caco3_nerbur_150, cobalt%jdic_caco3_nerbur_150, &
             model_time, rmask = grid_tmask(:,:,1), is_in=isc, js_in=jsc, ie_in=iec, je_in=jec)
+          ! >>
           !
           ! Water column flux integrals
           !
@@ -2032,7 +2035,9 @@ module COBALT_send_diag
             model_time, rmask = grid_tmask(:,:,1), is_in=isc, js_in=jsc, ie_in=iec, je_in=jec)
           used = g_send_data(cobalt%id_jalk_100, cobalt%jalk_100, &
             model_time, rmask = grid_tmask(:,:,1), is_in=isc, js_in=jsc, ie_in=iec, je_in=jec)
-
+! FEISTY ( BRZENSKI )
+          used = g_send_data(cobalt%id_Pop_btm, cobalt%Pop_btm, &
+            model_time, rmask = grid_tmask(:,:,1), is_in=isc, js_in=jsc, ie_in=iec, je_in=jec)
 !==============================================================================================================
 
       end select

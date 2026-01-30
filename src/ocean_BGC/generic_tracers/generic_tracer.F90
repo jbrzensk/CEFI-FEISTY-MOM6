@@ -105,6 +105,12 @@ module generic_tracer
   use generic_COBALT,  only : generic_COBALT_set_boundary_values, generic_COBALT_end, do_generic_COBALT
   use generic_COBALT,  only : as_param_cobalt
 
+  use generic_FEISTY,  only : generic_FEISTY_register
+  use generic_FEISTY,  only : generic_FEISTY_init, generic_FEISTY_fish_update_from_source,generic_FEISTY_register_diag
+  use generic_FEISTY,  only : generic_FEISTY_update_from_coupler
+  use generic_FEISTY,  only : generic_FEISTY_end, do_generic_FEISTY
+  use generic_FEISTY,  only : as_param_feisty
+
   use MOM_EOS,         only: EOS_type
 
   implicit none ; private
@@ -142,7 +148,7 @@ module generic_tracer
   character(len=10) :: as_param   = 'W14'     ! Use Wanninkhoff 2014 parameters for air-sea gas transfer by default
 
   namelist /generic_tracer_nml/ do_generic_tracer, do_generic_abiotic, do_generic_age, do_generic_argon, do_generic_CFC, &
-      do_generic_SF6, do_generic_BLING, do_generic_COBALT, &
+      do_generic_SF6, do_generic_BLING, do_generic_COBALT, do_generic_FEISTY, &
       force_update_fluxes, do_generic_blres, as_param, do_vertfill_post
 
 contains
@@ -176,7 +182,8 @@ contains
     if (do_generic_SF6)     as_param_sf6     = as_param
     if (do_generic_BLING)   as_param_bling   = as_param
     if (do_generic_COBALT)  as_param_cobalt  = as_param
-
+    if (do_generic_FEISTY)  as_param_feisty  = as_param
+    
     call read_mocsy_namelist()
 
     if(do_generic_abiotic) &
@@ -212,6 +219,9 @@ contains
     if(do_generic_COBALT) &
          call generic_COBALT_register(tracer_list)
     
+    if(do_generic_FEISTY) &
+         call generic_FEISTY_register(tracer_list)
+
     call g_tracer_print_info(tracer_list, verbosity)
 
     generic_tracer_register_called = .true.
@@ -306,8 +316,12 @@ contains
 !    if(do_generic_miniBLING) &
 !         call generic_miniBLING_init(tracer_list)
 
-    if(do_generic_COBALT) &
+     if(do_generic_COBALT) &
          call generic_COBALT_init(tracer_list, force_update_fluxes)
+
+     if(do_generic_FEISTY) &
+         call generic_FEISTY_init(tracer_list)
+
 
   end subroutine generic_tracer_init
 
@@ -346,6 +360,8 @@ contains
 !    if(do_generic_miniBLING)  call generic_miniBLING_register_diag()    
 
     if(do_generic_COBALT)  call generic_COBALT_register_diag(diag_list)
+
+    if(do_generic_FEISTY)  call generic_FEISTY_register_diag(diag_list)
 
     if(do_generic_SF6) call generic_SF6_register_diag(diag_list)
     
@@ -397,6 +413,8 @@ contains
 !    if(do_generic_miniBLING)  call generic_miniBLING_update_from_coupler(tracer_list)
 
     if(do_generic_COBALT)  call generic_COBALT_update_from_coupler(tracer_list)
+
+    if(do_generic_FEISTY)  call generic_FEISTY_update_from_coupler(tracer_list)
 
   end subroutine generic_tracer_coupler_get
 
@@ -508,6 +526,11 @@ contains
             hblt_depth,ilb,jlb,tau,dtts,grid_dat,model_time,&
             nbands,max_wavelength_band,sw_pen_band,opacity_band,internal_heat,frunoff,&
             geolat,photo_acc_dpth)
+
+!     if (do_generic_FEISTY) &
+!           call generic_FEISTY_fish_update_from_source(tracer_list, i, j, nk, NUM_PREY, &
+!           Temp, det, dt, zt, dzt, med_zoo_N, Lrg_zoo_N, &
+!           hp_ingest_nmdz, hp_ingest_nlgz)
 
     if(do_generic_SF6)  call generic_SF6_update_from_source(tracer_list,rho_dzt,dzt,hblt_depth,&
          ilb,jlb,tau,dtts,grid_dat,model_time)
@@ -748,6 +771,7 @@ contains
     if(do_generic_BLING)  call generic_BLING_end
 !    if(do_generic_miniBLING)  call generic_miniBLING_end
     if(do_generic_COBALT)  call generic_COBALT_end
+    if(do_generic_FEISTY)  call generic_FEISTY_end
 
   end subroutine generic_tracer_end
 

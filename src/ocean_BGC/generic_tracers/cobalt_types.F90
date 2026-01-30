@@ -38,6 +38,11 @@ module cobalt_types
                                             !! 1-default COBALT
                                             !! 2-update with no temperature dependence
                                             !! 3-update with temperature dependence
+  
+  ! FEISTY options for namelist ( BRZENSKI ) 
+  logical, public  :: do_FEISTY                  = .true.   
+  logical, public  :: do_print_FEISTY_diagnostic = .false.
+  real, public     :: nonFmort = 0.10
 
   ! parameters      
   integer, parameter, public :: NUM_PHYTO = 4 !< total number of phytoplankton groups
@@ -412,7 +417,11 @@ module cobalt_types
           do_fnso4red_sed,  &     ! Simulate O2 deficit and alkalinity flux from implied sedimentary sulfate reduction
           cased_steady,     &     ! steady state approximation for cased
           recalculate_carbon, &   ! true means C system is resolved for diagnostic
-          tracer_debug
+          tracer_debug, &
+          ! << Options for neritic CaCO3 burial and enhanced CaCO3 dissolution
+          do_ner_ca_bur, &        ! Apply neritic CaCO3 burial from O'Mara & Dunne (2019)
+          do_resp_ca_diss         ! Apply enhanced CaCO3 dissolution
+          ! >>
      real  ::          &
           min_thickness       ! minimum thickness of a layer that will be checked for source/sink imbalances
 
@@ -421,6 +430,10 @@ module cobalt_types
           c_2_n,            &
           ca_2_n_arag,      &
           ca_2_n_calc,      &
+          ! << Enhanced CaCO3 dissolution due to local undersaturation around sinking particles
+          resp_ca_2_n_arag, &
+          resp_ca_2_n_calc, &
+          ! >>
           caco3_sat_max,    &
           doc_background,   &
           fe_2_n_upt_fac,   &
@@ -447,6 +460,7 @@ module cobalt_types
           gamma_ndet,       &
           gamma_nitrif,     &
           k_nh3_nitrif,     &
+          nitrif_b,         &
           gamma_sidet,      &
           gamma_srdon,      &
           gamma_srdop,      &
@@ -660,6 +674,8 @@ module cobalt_types
           jprod_lithdet,&
           jprod_cadet_arag,&
           jprod_cadet_calc,&
+! << Add neritic CaCO3 burial >>
+          jdic_caco3_nerbur,&
           jprod_nh4,&
           jprod_nh4_plus_btm,&
           jprod_po4,&
@@ -739,7 +755,10 @@ module cobalt_types
           remoc, &
           tot_layer_int_doc,&
           tot_layer_int_poc,&
-          tot_layer_int_dic
+          tot_layer_int_dic,&
+          ! FESITY ( BRZENSKI )
+          hp_ingest_nmdz,&
+          hp_ingest_nlgz
 
 !==============================================================================================================
 
@@ -784,6 +803,8 @@ module cobalt_types
           jprod_sidet_100,&
           jprod_cadet_calc_100,&
           jprod_cadet_arag_100,&
+! << Add neritic CaCO3 burial >>
+          jdic_caco3_nerbur_150,&
           jprod_mesozoo_200, &
           jremin_ndet_100, &
           f_ndet_100, &
@@ -862,7 +883,9 @@ module cobalt_types
           wc_vert_int_jnamx,&
           wc_vert_int_jfe_iceberg,&
           wc_vert_int_jno3_iceberg,&
-          wc_vert_int_jpo4_iceberg
+          wc_vert_int_jpo4_iceberg, &
+          ! FEISTY ( BRZENSKI )
+          Pop_btm
 !==============================================================================================================
 
      real, dimension(:,:,:,:), pointer :: &
@@ -907,7 +930,10 @@ module cobalt_types
           p_sio4,&
           p_nsmz,&
           p_nmdz,&
-          p_nlgz
+          p_nlgz,&
+          ! FEISTY ( BRZENSKI )
+          p_hp_ingest_nmdz,&
+          p_hp_ingest_nlgz
 
       real, dimension (:,:), allocatable :: &
           runoff_flux_alk,&
@@ -973,6 +999,8 @@ module cobalt_types
           id_jprod_lithdet = -1,       &
           id_jprod_cadet_arag = -1,    &
           id_jprod_cadet_calc = -1,    &
+! << Add neritic CaCO3 burial >>
+          id_jdic_caco3_nerbur = -1, &
           id_jprod_po4     = -1,       &
           id_jprod_nh4     = -1,       &
           id_jprod_nh4_plus_btm = -1,  &
@@ -1170,6 +1198,8 @@ module cobalt_types
           id_jprod_sidet_100 = -1,     &
           id_jprod_cadet_calc_100 = -1, &
           id_jprod_cadet_arag_100 = -1, &
+! << Add neritic CaCO3 burial >>
+          id_jdic_caco3_nerbur_150 = -1, &
           id_jprod_mesozoo_200 = -1,   &
           id_daylength         = -1,   &
           id_jremin_ndet_100 = -1,     &
@@ -1416,7 +1446,9 @@ module cobalt_types
           id_fbddtdip           = -1, &
           id_fbddtdife          = -1, &
           id_fbddtdisi          = -1, &
-          id_fbddtalk           = -1
+          id_fbddtalk           = -1, &
+          ! FEISTY ( BRZENSKI )
+          id_Pop_btm            = -1
 
 !==============================================================================================================
   end type generic_COBALT_type
